@@ -474,6 +474,7 @@ async function initialize(): Promise<void> {
   const gatewayAutoStart = await getSetting('gatewayAutoStart');
   if (!isE2EMode && gatewayAutoStart) {
     try {
+      logger.debug('Syncing all providers to runtime before gateway start...');
       await syncAllProviderAuthToRuntime();
       logger.debug('Auto-starting Gateway...');
       await gatewayManager.start();

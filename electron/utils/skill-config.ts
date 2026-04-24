@@ -15,7 +15,9 @@ import { logger } from './logger';
 import { cpAsyncSafe } from './plugin-install';
 import { withConfigLock } from './config-mutex';
 
-const OPENCLAW_CONFIG_PATH = join(homedir(), '.openclaw', 'openclaw.json');
+function getOpenClawConfigPath(): string {
+  return join(process.env.USERPROFILE || homedir(), '.openclaw', 'openclaw.json');
+}
 
 interface SkillEntry {
     enabled?: boolean;
@@ -65,11 +67,11 @@ async function fileExists(p: string): Promise<boolean> {
  * Read the current OpenClaw config
  */
 async function readConfig(): Promise<OpenClawConfig> {
-    if (!(await fileExists(OPENCLAW_CONFIG_PATH))) {
+    if (!(await fileExists(getOpenClawConfigPath()))) {
         return {};
     }
     try {
-        const raw = await readFile(OPENCLAW_CONFIG_PATH, 'utf-8');
+        const raw = await readFile(getOpenClawConfigPath(), 'utf-8');
         return JSON.parse(raw);
     } catch (err) {
         console.error('Failed to read openclaw config:', err);
@@ -82,7 +84,7 @@ async function readConfig(): Promise<OpenClawConfig> {
  */
 async function writeConfig(config: OpenClawConfig): Promise<void> {
     const json = JSON.stringify(config, null, 2);
-    await writeFile(OPENCLAW_CONFIG_PATH, json, 'utf-8');
+    await writeFile(getOpenClawConfigPath(), json, 'utf-8');
 }
 
 async function setSkillsEnabled(skillKeys: string[], enabled: boolean): Promise<void> {

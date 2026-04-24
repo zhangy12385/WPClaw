@@ -22,6 +22,7 @@ import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip
 import { cn } from '@/lib/utils';
 import { useGatewayStore } from '@/stores/gateway';
 import { useSettingsStore } from '@/stores/settings';
+import { useUserStore, RELAY_STATION_URL } from '@/stores/user';
 import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
 import { SUPPORTED_LANGUAGES } from '@/i18n';
@@ -135,6 +136,18 @@ export function Setup() {
 
   const handleNext = async () => {
     if (isLastStep) {
+      // Ensure relay-station provider is saved before completing setup
+      const { tokenKey, selectedModel, models } = useUserStore.getState();
+      if (tokenKey) {
+        // Use selectedModel, or fallback to first available model, or use a default
+        const modelToSave = selectedModel || models[0] || 'gpt-4o';
+        try {
+          const apiKey = tokenKey.startsWith('sk-') ? tokenKey : `sk-${tokenKey}`;
+          await invokeIpc('provider:saveRelayStation', RELAY_STATION_URL, apiKey, modelToSave);
+        } catch (err) {
+          console.warn('[Setup] Failed to save relay station on complete:', err);
+        }
+      }
       // Complete setup
       markSetupComplete();
       toast.success(t('complete.title'));

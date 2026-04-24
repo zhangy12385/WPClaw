@@ -280,8 +280,8 @@
     "faq": "常见问题"
   },
   "relayStation": {
-    "modelSettings": "中转站模型",
-    "modelSettingsDesc": "选择中转站的默认模型",
+    "modelSettings": "AI模型",
+    "modelSettingsDesc": "选择默认AI模型",
     "modelChanged": "默认模型已切换为 {{model}}",
     "modelChangeFailed": "切换默认模型失败",
     "currentDefault": "当前",

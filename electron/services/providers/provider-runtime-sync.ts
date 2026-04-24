@@ -214,9 +214,10 @@ export async function syncProviderApiKeyToRuntime(
 
 export async function syncAllProviderAuthToRuntime(): Promise<void> {
   const accounts = await listProviderAccounts();
+  logger.debug(`[provider-sync] Syncing ${accounts.length} provider accounts to runtime`);
 
   for (const account of accounts) {
-    const runtimeProviderKey = await resolveRuntimeProviderKey({
+    const config: ProviderConfig = {
       id: account.id,
       name: account.label,
       type: account.vendorId,
@@ -227,7 +228,8 @@ export async function syncAllProviderAuthToRuntime(): Promise<void> {
       enabled: account.enabled,
       createdAt: account.createdAt,
       updatedAt: account.updatedAt,
-    });
+    };
+    const runtimeProviderKey = await resolveRuntimeProviderKey(config);
 
     const secret = await getProviderSecret(account.id);
     if (!secret) {
@@ -236,15 +238,9 @@ export async function syncAllProviderAuthToRuntime(): Promise<void> {
 
     if (secret.type === 'api_key') {
       await saveProviderKeyToOpenClaw(runtimeProviderKey, secret.apiKey);
-      continue;
-    }
-
-    if (secret.type === 'local' && secret.apiKey) {
+    } else if (secret.type === 'local' && secret.apiKey) {
       await saveProviderKeyToOpenClaw(runtimeProviderKey, secret.apiKey);
-      continue;
-    }
-
-    if (secret.type === 'oauth') {
+    } else if (secret.type === 'oauth') {
       await saveOAuthTokenToOpenClaw(runtimeProviderKey, {
         access: secret.accessToken,
         refresh: secret.refreshToken,
@@ -252,6 +248,36 @@ export async function syncAllProviderAuthToRuntime(): Promise<void> {
         email: secret.email,
         projectId: secret.subject,
       });
+    } else {
+      continue;
+    }
+
+    // Also sync provider config (baseUrl, model) so the gateway has full provider info
+    const meta = getProviderConfig(config.type);
+    const api = config.apiProtocol || (isUnregisteredProviderType(config.type) ? 'openai-completions' : meta?.api);
+    logger.debug(`[provider-sync] Syncing provider "${account.id}": baseUrl=${config.baseUrl}, model=${config.model}, api=${api}`);
+    if (api) {
+      await syncProviderConfigToOpenClaw(runtimeProviderKey, config.model, {
+        baseUrl: normalizeProviderBaseUrl(config, config.baseUrl || meta?.baseUrl, api),
+        api,
+        apiKeyEnv: meta?.apiKeyEnv,
+        headers: config.headers ?? meta?.headers,
+      });
+    }
+
+    // For custom/unregistered providers, also sync to models.json
+    if (isUnregisteredProviderType(config.type)) {
+      const resolvedApiKey = secret.type === 'api_key' || secret.type === 'local'
+        ? secret.apiKey
+        : await getApiKey(config.id);
+      if (resolvedApiKey && config.baseUrl) {
+        await updateAgentModelProvider(runtimeProviderKey, {
+          baseUrl: normalizeProviderBaseUrl(config, config.baseUrl, config.apiProtocol || 'openai-completions'),
+          api: config.apiProtocol || 'openai-completions',
+          models: config.model ? [{ id: config.model, name: config.model }] : [],
+          apiKey: resolvedApiKey,
+        });
+      }
     }
   }
 }

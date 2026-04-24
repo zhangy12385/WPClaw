@@ -208,7 +208,9 @@ async function discoverAgentIds(): Promise<string[]> {
 
 // ── OpenClaw Config Helpers ──────────────────────────────────────
 
-const OPENCLAW_CONFIG_PATH = join(homedir(), '.openclaw', 'openclaw.json');
+function getOpenClawConfigPath(): string {
+  return join(process.env.USERPROFILE || homedir(), '.openclaw', 'openclaw.json');
+}
 const FEISHU_PLUGIN_ID_CANDIDATES = ['openclaw-lark', 'feishu-openclaw-plugin'] as const;
 const VALID_COMPACTION_MODES = new Set(['default', 'safeguard']);
 const BUILTIN_CHANNEL_IDS = new Set([
@@ -333,7 +335,7 @@ async function getProvidersFromAuthProfileStores(): Promise<Set<string>> {
 }
 
 async function readOpenClawJson(): Promise<Record<string, unknown>> {
-  return (await readJsonFile<Record<string, unknown>>(OPENCLAW_CONFIG_PATH)) ?? {};
+  return (await readJsonFile<Record<string, unknown>>(getOpenClawConfigPath())) ?? {};
 }
 
 async function resolveInstalledFeishuPluginId(): Promise<string | null> {
@@ -382,7 +384,7 @@ async function writeOpenClawJson(config: Record<string, unknown>): Promise<void>
   commands.restart = true;
   config.commands = commands;
 
-  await writeJsonFile(OPENCLAW_CONFIG_PATH, config);
+  await writeJsonFile(getOpenClawConfigPath(), config);
 }
 
 // ── Exported Functions (all async) ───────────────────────────────
@@ -1448,7 +1450,7 @@ export async function sanitizeOpenClawConfig(): Promise<void> {
     // Skip sanitization if the config file does not exist yet.
     // Creating a skeleton config here would overwrite any data written
     // by the Gateway on its first run.
-    if (!(await fileExists(OPENCLAW_CONFIG_PATH))) {
+    if (!(await fileExists(getOpenClawConfigPath()))) {
       console.log('[sanitize] openclaw.json does not exist yet, skipping sanitization');
       return;
     }
@@ -1457,7 +1459,7 @@ export async function sanitizeOpenClawConfig(): Promise<void> {
     // which coalesces null → {}.  We need to distinguish a genuinely empty
     // file (valid, proceed normally) from a corrupt/unreadable file (null,
     // bail out to avoid overwriting the user's data with a skeleton config).
-    const rawConfig = await readJsonFile<Record<string, unknown>>(OPENCLAW_CONFIG_PATH);
+    const rawConfig = await readJsonFile<Record<string, unknown>>(getOpenClawConfigPath());
     if (rawConfig === null) {
       console.log('[sanitize] openclaw.json could not be parsed, skipping sanitization to preserve data');
       return;

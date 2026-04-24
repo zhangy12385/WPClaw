@@ -28,7 +28,7 @@ import {
   setDefaultProvider,
   storeApiKey,
 } from '../../utils/secure-storage';
-import { getActiveOpenClawProviders, getOpenClawProvidersConfig, syncSavedProviderToRuntime, syncUpdatedProviderToRuntime, syncDefaultProviderToRuntime } from '../../utils/openclaw-auth';
+import { getActiveOpenClawProviders, getOpenClawProvidersConfig } from '../../utils/openclaw-auth';
 import { getAliasSourceTypes, getOpenClawProviderKeyForType } from '../../utils/provider-keys';
 import type { ProviderWithKeyInfo } from '../../shared/providers/types';
 import { logger } from '../../utils/logger';
@@ -396,13 +396,15 @@ export async function saveRelayStationConfig(
   model?: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
+    // Normalize baseUrl: remove trailing slashes and add /v1 for OpenAI-compatible API
+    const normalizedBaseUrl = url.replace(/\/+$/, '') + '/v1';
     const account: ProviderAccount = {
       id: 'relay-station',
       vendorId: 'custom',
       label: 'WPClaw',
       authMode: 'api_key',
-      baseUrl: url,
-      apiProtocol: 'openai-completions',
+      baseUrl: normalizedBaseUrl,
+      apiProtocol: 'openai-responses',
       model: model,
       enabled: true,
       isDefault: true,

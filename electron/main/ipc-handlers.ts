@@ -2054,12 +2054,15 @@ function registerProviderHandlers(gatewayManager: GatewayManager): void {
 
   // Save relay station configuration
   ipcMain.handle('provider:saveRelayStation', async (_, url: string, apiKey: string, model: string) => {
+    console.log('[provider:saveRelayStation] Starting with url=', url, 'model=', model);
     try {
       const result = await saveRelayStationConfig(url, apiKey, model);
+      console.log('[provider:saveRelayStation] saveRelayStationConfig result:', result);
 
       // Write API key to OpenClaw auth-profiles.json
       try {
         await syncProviderApiKeyToRuntime('custom', 'relay-station', apiKey);
+        console.log('[provider:saveRelayStation] syncProviderApiKeyToRuntime success');
       } catch (err) {
         console.warn('[provider:saveRelayStation] Failed to sync key to OpenClaw auth-profiles:', err);
       }
@@ -2068,19 +2071,24 @@ function registerProviderHandlers(gatewayManager: GatewayManager): void {
       try {
         const providerService = getProviderService();
         const account = await providerService.getAccount('relay-station');
+        console.log('[provider:saveRelayStation] account from store:', account);
         if (account) {
           const config = {
             id: account.id,
             name: account.label,
             type: account.vendorId as ProviderConfig['type'],
-            baseUrl: url,
+            baseUrl: account.baseUrl,  // Already normalized with /v1 in saveRelayStationConfig
             model,
-            apiProtocol: account.apiProtocol as 'openai-completions' | 'openai-responses' | 'anthropic-messages',
+            apiProtocol: account.apiProtocol as 'openai-responses',
             enabled: true,
             createdAt: account.createdAt,
             updatedAt: new Date().toISOString(),
           };
+          console.log('[provider:saveRelayStation] syncing config to runtime, gatewayManager=', gatewayManager ? 'exists' : 'undefined');
           await syncSavedProviderToRuntime(config, apiKey, gatewayManager);
+          console.log('[provider:saveRelayStation] syncSavedProviderToRuntime completed');
+        } else {
+          console.warn('[provider:saveRelayStation] account not found after save!');
         }
       } catch (err) {
         console.warn('[provider:saveRelayStation] Failed to sync provider to runtime:', err);
@@ -2089,12 +2097,14 @@ function registerProviderHandlers(gatewayManager: GatewayManager): void {
       // Sync as default provider
       try {
         await syncDefaultProviderToRuntime('relay-station', gatewayManager);
+        console.log('[provider:saveRelayStation] syncDefaultProviderToRuntime completed');
       } catch (err) {
         console.warn('[provider:saveRelayStation] Failed to sync default provider to OpenClaw:', err);
       }
 
       return result;
     } catch (error) {
+      console.error('[provider:saveRelayStation] Unexpected error:', error);
       return { success: false, error: String(error) };
     }
   });
@@ -2119,7 +2129,7 @@ function registerProviderHandlers(gatewayManager: GatewayManager): void {
               type: account.vendorId as ProviderConfig['type'],
               baseUrl: account.baseUrl || 'https://www.wangpai.one',
               model: model,
-              apiProtocol: account.apiProtocol as 'openai-completions' | 'openai-responses' | 'anthropic-messages',
+              apiProtocol: account.apiProtocol as 'openai-responses',
               enabled: true,
               createdAt: account.createdAt,
               updatedAt: new Date().toISOString(),

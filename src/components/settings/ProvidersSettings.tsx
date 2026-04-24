@@ -246,10 +246,6 @@ export function ProvidersSettings() {
         <h2 data-testid="providers-settings-title" className="text-3xl font-serif text-foreground font-normal tracking-tight" style={{ fontFamily: 'Georgia, Cambria, "Times New Roman", Times, serif' }}>
           {t('aiProviders.title', 'AI Providers')}
         </h2>
-        <Button data-testid="providers-add-button" onClick={() => setShowAddDialog(true)} className="rounded-full px-5 h-9 shadow-none font-medium text-[13px]">
-          <Plus className="h-4 w-4 mr-2" />
-          {t('aiProviders.add')}
-        </Button>
       </div>
 
       {loading ? (
@@ -309,14 +305,7 @@ export function ProvidersSettings() {
 
       {/* Add Provider Dialog */}
       {showAddDialog && (
-        <AddProviderDialog
-          existingVendorIds={existingVendorIds}
-          vendors={vendors}
-          onClose={() => setShowAddDialog(false)}
-          onAdd={handleAddProvider}
-          onValidateKey={(type, key, options) => validateAccountApiKey(type, key, options)}
-          devModeUnlocked={devModeUnlocked}
-        />
+        <div></div>
       )}
     </div>
   );
@@ -571,38 +560,6 @@ function ProviderCard({
 
         {!isEditing && (
           <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-            {!isDefault && (
-            <Button
-              data-testid={`provider-set-default-${account.id}`}
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 rounded-full text-muted-foreground hover:text-blue-600 hover:bg-white dark:hover:bg-card shadow-sm"
-                onClick={onSetDefault}
-                title={t('aiProviders.card.setDefault')}
-              >
-                <Check className="h-4 w-4" />
-              </Button>
-            )}
-            <Button
-              data-testid={`provider-edit-${account.id}`}
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 rounded-full text-muted-foreground hover:text-foreground hover:bg-white dark:hover:bg-card shadow-sm"
-              onClick={onEdit}
-              title={t('aiProviders.card.editKey')}
-            >
-              <Edit className="h-4 w-4" />
-            </Button>
-            <Button
-              data-testid={`provider-delete-${account.id}`}
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 rounded-full text-muted-foreground hover:text-destructive hover:bg-white dark:hover:bg-card shadow-sm"
-              onClick={onDelete}
-              title={t('aiProviders.card.delete')}
-            >
-              <Trash2 className="h-4 w-4" />
-            </Button>
           </div>
         )}
       </div>

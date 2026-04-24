@@ -1,7 +1,7 @@
 /**
  * Personal Center Page
  * 3 tabs: Account Overview, Models, Recharge
- * Notice content is displayed in the header area
+ * Styled to match Skills page visual design
  */
 import { useEffect, useState } from 'react';
 import { useUserStore } from '@/stores/user';
@@ -11,6 +11,7 @@ import { Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ProvidersSettings } from '@/components/settings/ProvidersSettings';
 import { RelayStationModelSettings } from '@/components/settings/RelayStationModelSettings';
+import { cn } from '@/lib/utils';
 
 type Tab = 'overview' | 'models' | 'recharge';
 
@@ -76,145 +77,149 @@ export function PersonalCenter() {
   ];
 
   return (
-    <div className="flex flex-col h-full">
-      {/* Page header - username and notice content */}
-      <div className="px-3 py-4 border-b space-y-2">
-        {username && (
-          <div className="text-sm font-medium text-foreground">
-            <span className="font-bold text-foreground">当前用户：</span>{username}
-          </div>
-        )}
-        {loadingNotice ? (
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Loader2 className="h-4 w-4 animate-spin" />
-            <span>Loading notice...</span>
-          </div>
-        ) : notice ? (
-          <div className="text-sm whitespace-pre-wrap text-muted-foreground">
-            <span className="font-bold text-foreground">系统公告：</span>{notice}
-          </div>
-        ) : (
-          <span className="text-sm text-muted-foreground">暂无公告</span>
-        )}
-      </div>
-
-      {/* Tab bar */}
-      <div className="pt-4 flex gap-1">
-        {tabs.map((tab) => (
-          <button
-            key={tab.key}
-            onClick={() => setActiveTab(tab.key)}
-            className={`px-4 py-2 rounded-t-lg text-sm font-medium transition-colors ${
-              activeTab === tab.key
-                ? 'bg-background border border-b-0 border-border text-foreground'
-                : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
-            }`}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
-
-      {/* Tab content */}
-      <div className="flex-1 overflow-auto p-6 bg-background border border-border rounded-b-lg rounded-tr-lg">
-        {/* Account Overview */}
-        {activeTab === 'overview' && (
-          <div className="space-y-6">
-            {loadingOverview ? (
-              <div className="flex items-center justify-center py-12">
-                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-              </div>
-            ) : userSelfData ? (
-              <>
-                {/* 统计卡片 */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="p-4 rounded-lg bg-muted/50 text-center">
-                    <div className="text-2xl">💰</div>
-                    <div className="text-2xl font-bold text-foreground mt-2">${totalBalance}</div>
-                    <div className="text-sm text-muted-foreground mt-1">当前余额</div>
-                  </div>
-                  <div className="p-4 rounded-lg bg-muted/50 text-center">
-                    <div className="text-2xl">📊</div>
-                    <div className="text-2xl font-bold text-foreground mt-2">${usedAmount}</div>
-                    <div className="text-sm text-muted-foreground mt-1">历史消耗</div>
-                  </div>
-                </div>
-
-                {/* 使用统计 */}
-                <div className="space-y-3">
-                  <h3 className="text-sm font-medium flex items-center gap-2">
-                    <span>📈</span> 使用统计
-                  </h3>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="p-3 rounded-lg bg-muted/50">
-                      <div className="text-lg font-bold text-foreground">{userSelfData?.request_count ?? 0}</div>
-                      <div className="text-xs text-muted-foreground">请求次数</div>
-                    </div>
-                    <div className="p-3 rounded-lg bg-muted/50">
-                      <div className="text-lg font-bold text-foreground">{totalTimesDisplay}</div>
-                      <div className="text-xs text-muted-foreground">统计次数</div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* 资源消耗 */}
-                <div className="space-y-3">
-                  <h3 className="text-sm font-medium flex items-center gap-2">
-                    <span>⚡</span> 资源消耗
-                  </h3>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="p-3 rounded-lg bg-muted/50">
-                      <div className="text-lg font-bold text-foreground">${usedAmount}</div>
-                      <div className="text-xs text-muted-foreground">统计额度</div>
-                    </div>
-                    <div className="p-3 rounded-lg bg-muted/50">
-                      <div className="text-lg font-bold text-foreground">{totalTokensDisplay}</div>
-                      <div className="text-xs text-muted-foreground">统计Tokens</div>
-                    </div>
-                  </div>
-                </div>
-              </>
-            ) : (
-              <div className="text-center py-12 text-muted-foreground">
-                {accessToken ? t('quota.empty') : t('quota.notLoggedIn')}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Models */}
-        {activeTab === 'models' && (
-          <div className="space-y-12">
-            <ProvidersSettings locked={true} />
-            <RelayStationModelSettings />
-          </div>
-        )}
-
-        {/* Recharge */}
-        {activeTab === 'recharge' && (
-          <div className="space-y-4 max-w-md">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">{t('redeem.code')}</label>
-              <input
-                type="text"
-                value={redeemCode}
-                onChange={(e) => setRedeemCode(e.target.value)}
-                placeholder={t('redeem.placeholder')}
-                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-              />
+    <div className="flex flex-col -m-6 dark:bg-background h-[calc(100vh-2.5rem)] overflow-hidden">
+      <div className="w-full max-w-5xl mx-auto flex flex-col h-full px-10 py-10 pt-16">
+        {/* Header */}
+        <div className="mb-6 shrink-0">
+          <h1 className="text-4xl font-serif text-foreground mb-1 font-normal tracking-tight">
+            {t('title')}
+          </h1>
+          {username && (
+            <p className="text-[14px] text-foreground/70 font-medium">
+              <span className="font-bold text-foreground">当前用户：</span>{username}
+            </p>
+          )}
+          {loadingNotice ? (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              <span>Loading notice...</span>
             </div>
-            <Button
-              onClick={handleRedeem}
-              disabled={redeeming || !redeemCode.trim()}
-              className="w-full"
+          ) : notice ? (
+            <p className="text-[14px] text-muted-foreground mt-1 whitespace-pre-wrap">
+              <span className="font-bold text-foreground">系统公告：</span>{notice}
+            </p>
+          ) : (
+            <p className="text-sm text-muted-foreground mt-1">暂无公告</p>
+          )}
+        </div>
+
+        {/* Tab bar */}
+        <div className="flex items-center flex-wrap gap-4 text-[14px] mb-4 shrink-0 border-b border-black/10 dark:border-white/10 pb-4">
+          {tabs.map((tab) => (
+            <button
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key)}
+              className={cn(
+                "font-medium transition-colors flex items-center gap-1.5",
+                activeTab === tab.key ? "text-foreground" : "text-muted-foreground hover:text-foreground"
+              )}
             >
-              {redeeming ? (
-                <Loader2 className="h-4 w-4 animate-spin mr-2" />
-              ) : null}
-              {t('redeem.button')}
-            </Button>
-          </div>
-        )}
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Tab content */}
+        <div className="flex-1 overflow-y-auto pr-2 pb-10 min-h-0 -mr-2">
+          {/* Account Overview */}
+          {activeTab === 'overview' && (
+            <div className="space-y-6">
+              {loadingOverview ? (
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                </div>
+              ) : userSelfData ? (
+                <>
+                  {/* 统计卡片 */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="p-4 rounded-xl bg-[#eeece3] dark:bg-muted text-center border border-black/5 dark:border-white/5">
+                      <div className="text-2xl">💰</div>
+                      <div className="text-2xl font-bold text-foreground mt-2">${totalBalance}</div>
+                      <div className="text-sm text-muted-foreground mt-1">当前余额</div>
+                    </div>
+                    <div className="p-4 rounded-xl bg-[#eeece3] dark:bg-muted text-center border border-black/5 dark:border-white/5">
+                      <div className="text-2xl">📊</div>
+                      <div className="text-2xl font-bold text-foreground mt-2">${usedAmount}</div>
+                      <div className="text-sm text-muted-foreground mt-1">历史消耗</div>
+                    </div>
+                  </div>
+
+                  {/* 使用统计 */}
+                  <div className="space-y-3">
+                    <h3 className="text-sm font-medium flex items-center gap-2 text-foreground/80">
+                      <span>📈</span> 使用统计
+                    </h3>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="p-3 rounded-xl bg-[#eeece3] dark:bg-muted border border-black/5 dark:border-white/5">
+                        <div className="text-lg font-bold text-foreground">{userSelfData?.request_count ?? 0}</div>
+                        <div className="text-xs text-muted-foreground">请求次数</div>
+                      </div>
+                      <div className="p-3 rounded-xl bg-[#eeece3] dark:bg-muted border border-black/5 dark:border-white/5">
+                        <div className="text-lg font-bold text-foreground">{totalTimesDisplay}</div>
+                        <div className="text-xs text-muted-foreground">统计次数</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 资源消耗 */}
+                  <div className="space-y-3">
+                    <h3 className="text-sm font-medium flex items-center gap-2 text-foreground/80">
+                      <span>⚡</span> 资源消耗
+                    </h3>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="p-3 rounded-xl bg-[#eeece3] dark:bg-muted border border-black/5 dark:border-white/5">
+                        <div className="text-lg font-bold text-foreground">${usedAmount}</div>
+                        <div className="text-xs text-muted-foreground">统计额度</div>
+                      </div>
+                      <div className="p-3 rounded-xl bg-[#eeece3] dark:bg-muted border border-black/5 dark:border-white/5">
+                        <div className="text-lg font-bold text-foreground">{totalTokensDisplay}</div>
+                        <div className="text-xs text-muted-foreground">统计Tokens</div>
+                      </div>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <div className="text-center py-12 text-muted-foreground">
+                  {accessToken ? t('quota.empty') : t('quota.notLoggedIn')}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Models */}
+          {activeTab === 'models' && (
+            <div className="space-y-8">
+              <ProvidersSettings locked={true} />
+              <RelayStationModelSettings />
+            </div>
+          )}
+
+          {/* Recharge */}
+          {activeTab === 'recharge' && (
+            <div className="space-y-4 max-w-md">
+              <div className="space-y-2">
+                <label className="text-[13px] font-bold text-foreground/80">{t('redeem.code')}</label>
+                <input
+                  type="text"
+                  value={redeemCode}
+                  onChange={(e) => setRedeemCode(e.target.value)}
+                  placeholder={t('redeem.placeholder')}
+                  className="w-full rounded-xl border border-black/10 dark:border-white/10 bg-[#eeece3] dark:bg-muted px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring transition-all text-foreground placeholder:text-foreground/40"
+                />
+              </div>
+              <Button
+                onClick={handleRedeem}
+                disabled={redeeming || !redeemCode.trim()}
+                className="w-full h-11 text-[13px] rounded-xl font-semibold shadow-sm bg-[#0a84ff] hover:bg-[#007aff] text-white border-0"
+              >
+                {redeeming ? (
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                ) : null}
+                {t('redeem.button')}
+              </Button>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

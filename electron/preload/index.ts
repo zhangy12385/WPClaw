@@ -113,6 +113,9 @@ const electronAPI = {
         // UV
         'uv:check',
         'uv:install-all',
+        // Provider
+        'provider:saveRelayStation',
+        'provider:setRelayStationModel',
         // Skill config (direct file access)
         'skill:updateConfig',
         'skill:getConfig',
