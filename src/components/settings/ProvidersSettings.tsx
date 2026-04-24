@@ -256,13 +256,9 @@ export function ProvidersSettings() {
         <div data-testid="providers-empty-state" className="flex flex-col items-center justify-center py-20 text-muted-foreground bg-black/5 dark:bg-white/5 rounded-3xl border border-transparent border-dashed">
           <Key className="h-12 w-12 mb-4 opacity-50" />
           <h3 className="text-[15px] font-medium mb-1 text-foreground">{t('aiProviders.empty.title')}</h3>
-          <p className="text-[13px] text-center mb-6 max-w-sm">
+          <p className="text-[13px] text-center max-w-sm">
             {t('aiProviders.empty.desc')}
           </p>
-          <Button onClick={() => setShowAddDialog(true)} className="rounded-full px-6 h-10 bg-[#0a84ff] hover:bg-[#007aff] text-white">
-            <Plus className="h-4 w-4 mr-2" />
-            {t('aiProviders.empty.cta')}
-          </Button>
         </div>
       ) : (
         <div className="space-y-3">
