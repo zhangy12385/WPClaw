@@ -1,0 +1,40 @@
+{
+    "title": "个人中心",
+    "tabs": {
+        "overview": "账户概览",
+        "models": "模型",
+        "recharge": "充值"
+    },
+    "quota": {
+        "available": "可用配额",
+        "total": "总配额",
+        "used": "已使用",
+        "date": "日期",
+        "empty": "暂无配额数据",
+        "notLoggedIn": "未登录"
+    },
+    "notice": {
+        "empty": "暂无公告"
+    },
+    "redeem": {
+        "code": "兑换码",
+        "placeholder": "输入兑换码",
+        "button": "兑换",
+        "success": "兑换成功",
+        "failed": "兑换失败"
+    },
+    "status": {
+        "completed": "已完成",
+        "pending": "进行中"
+    },
+    "dashboard": {
+        "currentBalance": "当前余额",
+        "historyUsage": "历史消耗",
+        "requestCount": "请求次数",
+        "statisticsCount": "统计次数",
+        "quotaUsage": "配额使用",
+        "tokenUsage": "Token使用",
+        "avgRPM": "平均RPM",
+        "avgTPM": "平均TPM"
+    }
+}

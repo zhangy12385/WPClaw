@@ -275,5 +275,13 @@
     "docs": "公式サイト",
     "github": "GitHub",
     "faq": "よくある質問"
+  },
+  "relayStation": {
+    "modelSettings": "リレーステーション モデル",
+    "modelSettingsDesc": "リレーステーションのデフォルトモデルを選択",
+    "modelChanged": "デフォルトモデルが {{model}} に変更されました",
+    "modelChangeFailed": "デフォルトモデルの変更に失敗しました",
+    "currentDefault": "現在",
+    "setAsDefault": "デフォルトに設定"
   }
 }

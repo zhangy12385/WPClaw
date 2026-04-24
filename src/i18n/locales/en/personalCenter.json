@@ -1,0 +1,40 @@
+{
+    "title": "Personal Center",
+    "tabs": {
+        "overview": "Account Overview",
+        "models": "Models",
+        "recharge": "Recharge"
+    },
+    "quota": {
+        "available": "Available Quota",
+        "total": "Total Quota",
+        "used": "Used",
+        "date": "Date",
+        "empty": "No quota data",
+        "notLoggedIn": "Not logged in"
+    },
+    "notice": {
+        "empty": "No notice"
+    },
+    "redeem": {
+        "code": "Redemption Code",
+        "placeholder": "Enter redemption code",
+        "button": "Redeem",
+        "success": "Redeemed successfully",
+        "failed": "Redeem failed"
+    },
+    "status": {
+        "completed": "Completed",
+        "pending": "Pending"
+    },
+    "dashboard": {
+        "currentBalance": "Current Balance",
+        "historyUsage": "History Usage",
+        "requestCount": "Request Count",
+        "statisticsCount": "Statistics Count",
+        "quotaUsage": "Quota Usage",
+        "tokenUsage": "Token Usage",
+        "avgRPM": "Avg RPM",
+        "avgTPM": "Avg TPM"
+    }
+}

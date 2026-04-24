@@ -278,5 +278,13 @@
     "docs": "Website",
     "github": "GitHub",
     "faq": "FAQ"
+  },
+  "relayStation": {
+    "modelSettings": "Relay Station Model",
+    "modelSettingsDesc": "Select the default model for Relay Station",
+    "modelChanged": "Default model changed to {{model}}",
+    "modelChangeFailed": "Failed to change default model",
+    "currentDefault": "Current",
+    "setAsDefault": "Set Default"
   }
 }

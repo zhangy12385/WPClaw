@@ -278,5 +278,13 @@
     "docs": "Веб-сайт",
     "github": "GitHub",
     "faq": "FAQ"
+  },
+  "relayStation": {
+    "modelSettings": "Модель ретрансляционной станции",
+    "modelSettingsDesc": "Выберите модель по умолчанию для ретрансляционной станции",
+    "modelChanged": "Модель по умолчанию изменена на {{model}}",
+    "modelChangeFailed": "Не удалось изменить модель по умолчанию",
+    "currentDefault": "Текущая",
+    "setAsDefault": "Установить по умолчанию"
   }
 }

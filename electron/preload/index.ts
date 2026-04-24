@@ -137,6 +137,12 @@ const electronAPI = {
         'openclaw:getConfigDir',
         'openclaw:getSkillsDir',
         'openclaw:getCliCommand',
+        // User session
+        'user:saveSession',
+        'user:loadSession',
+        'user:clearSession',
+        // Relay fetch
+        'relay:fetch',
       ];
 
       if (validChannels.includes(channel)) {

@@ -8,9 +8,37 @@
             "title": "Environment Check",
             "description": "Verifying system requirements"
         },
-        "provider": {
-            "title": "AI Provider",
-            "description": "Configure your AI service"
+        "account": {
+            "title": "Create Account",
+            "description": "Register your account to start using the service",
+            "username": "Username",
+            "usernamePlaceholder": "Enter username",
+            "password": "Password",
+            "passwordPlaceholder": "Enter password",
+            "register": "Register",
+            "login": "Login",
+            "logining": "Logging in...",
+            "registering": "Registering...",
+            "registerFailed": "Registration failed",
+            "passwordTooShort": "Password must be 8-20 characters",
+            "loginFailed": "Login failed",
+            "hasAccount": "Already have an account?",
+            "noAccount": "No account yet?",
+            "goLogin": "Login now",
+            "goRegister": "Register now",
+            "getToken": "Getting access token...",
+            "getModels": "Fetching available models...",
+            "noTokenFound": "No token found",
+            "getTokenKeyFailed": "Failed to get token key",
+            "fetchModelsFailed": "Failed to fetch models",
+            "noModels": "No models available",
+            "models": {
+                "title": "Select Model"
+            },
+            "selectModel": "Select a model",
+            "apiKey": "LLM API Key",
+            "ready": "Account created successfully",
+            "readyDesc": "Model selected: {{model}}"
         },
         "channel": {
             "title": "Connect a Channel",

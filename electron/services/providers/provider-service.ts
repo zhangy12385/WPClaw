@@ -28,7 +28,7 @@ import {
   setDefaultProvider,
   storeApiKey,
 } from '../../utils/secure-storage';
-import { getActiveOpenClawProviders, getOpenClawProvidersConfig } from '../../utils/openclaw-auth';
+import { getActiveOpenClawProviders, getOpenClawProvidersConfig, syncSavedProviderToRuntime, syncUpdatedProviderToRuntime, syncDefaultProviderToRuntime } from '../../utils/openclaw-auth';
 import { getAliasSourceTypes, getOpenClawProviderKeyForType } from '../../utils/provider-keys';
 import type { ProviderWithKeyInfo } from '../../shared/providers/types';
 import { logger } from '../../utils/logger';
@@ -388,4 +388,56 @@ const providerService = new ProviderService();
 
 export function getProviderService(): ProviderService {
   return providerService;
+}
+
+export async function saveRelayStationConfig(
+  url: string,
+  apiKey: string,
+  model?: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const account: ProviderAccount = {
+      id: 'relay-station',
+      vendorId: 'custom',
+      label: 'WPClaw',
+      authMode: 'api_key',
+      baseUrl: url,
+      apiProtocol: 'openai-completions',
+      model: model,
+      enabled: true,
+      isDefault: true,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    await saveProviderAccount(account);
+    await storeApiKey(account.id, apiKey);
+    await setDefaultProviderAccount('relay-station');
+
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: String(error) };
+  }
+}
+
+export async function updateRelayStationModel(
+  model: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const existing = await getProviderAccount('relay-station');
+    if (!existing) {
+      return { success: false, error: 'Relay station not configured' };
+    }
+
+    const updatedAccount: ProviderAccount = {
+      ...existing,
+      model,
+      updatedAt: new Date().toISOString(),
+    };
+
+    await saveProviderAccount(updatedAccount);
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: String(error) };
+  }
 }

@@ -3,11 +3,23 @@ import { proxyAwareFetch } from '../../utils/proxy-fetch';
 import { getPort } from '../../utils/config';
 import { getHostApiToken } from '../../api/server';
 
+// Simple cookie jar for relay requests
+const relayCookies: Map<string, string> = new Map();
+
 type HostApiFetchRequest = {
   path: string;
   method?: string;
   headers?: Record<string, string>;
   body?: unknown;
+};
+
+type RelayFetchRequest = {
+  url: string;
+  method?: string;
+  headers?: Record<string, string>;
+  body?: unknown;
+  credentials?: boolean;
+  signal?: AbortSignal;
 };
 
 export function registerHostApiProxyHandlers(): void {
@@ -48,6 +60,114 @@ export function registerHostApiProxyHandlers(): void {
         headers,
         body,
       });
+
+      const data: { status: number; ok: boolean; json?: unknown; text?: string } = {
+        status: response.status,
+        ok: response.ok,
+      };
+
+      if (response.status !== 204) {
+        const contentType = response.headers.get('content-type') || '';
+        if (contentType.includes('application/json')) {
+          data.json = await response.json().catch(() => undefined);
+        } else {
+          data.text = await response.text().catch(() => '');
+        }
+      }
+
+      return { ok: true, data };
+    } catch (error) {
+      return {
+        ok: false,
+        error: {
+          message: error instanceof Error ? error.message : String(error),
+        },
+      };
+    }
+  });
+
+  // Proxy handler for external relay station requests (bypasses CORS)
+  ipcMain.handle('relay:fetch', async (_, request: RelayFetchRequest) => {
+    try {
+      const url = typeof request?.url === 'string' ? request.url : '';
+      if (!url) {
+        throw new Error('Invalid relay URL');
+      }
+
+      const method = (request.method || 'GET').toUpperCase();
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+        ...(request.headers || {}),
+      };
+      let body: string | undefined;
+
+      if (request.body !== undefined && request.body !== null) {
+        if (typeof request.body === 'string') {
+          body = request.body;
+        } else {
+          body = JSON.stringify(request.body);
+        }
+      }
+
+      const urlObj = new URL(url);
+      const domain = urlObj.hostname;
+
+      // Attach stored cookies for this domain
+      const storedCookie = relayCookies.get(domain);
+      if (storedCookie) {
+        headers['Cookie'] = storedCookie;
+      }
+
+      // Build fetch options with optional abort signal and timeout
+      const fetchOptions: RequestInit = {
+        method,
+        headers,
+        body,
+      };
+      if (request.signal) {
+        fetchOptions.signal = request.signal;
+      }
+
+      // Apply a default timeout if no signal is provided
+      const controller = new AbortController();
+      if (!request.signal) {
+        const timer = setTimeout(() => controller.abort(), 60000); // 60秒超时
+        fetchOptions.signal = controller.signal;
+        // Store timer to clear on success/error
+        (fetchOptions as { _timer?: ReturnType<typeof setTimeout> })._timer = timer;
+      }
+
+      const response = await proxyAwareFetch(url, fetchOptions);
+
+      // Clear timeout if we set one
+      const timer = (fetchOptions as { _timer?: ReturnType<typeof setTimeout> })._timer;
+      if (timer) clearTimeout(timer);
+
+      // Extract and store Set-Cookie headers
+      let setCookieHeaders: string[] = [];
+      const rawHeaders = response.headers as Record<string, string | string[]>;
+      if (Array.isArray(rawHeaders['set-cookie'])) {
+        setCookieHeaders = rawHeaders['set-cookie'] as string[];
+      } else if (typeof rawHeaders['set-cookie'] === 'string') {
+        setCookieHeaders = [rawHeaders['set-cookie']];
+      } else if (typeof (response.headers as unknown as { list?: (name: string) => string[] }).list === 'function') {
+        setCookieHeaders = (response.headers as unknown as { list: (name: string) => string[] }).list('set-cookie');
+      }
+      for (const setCookie of setCookieHeaders) {
+        const cookiePart = setCookie.split(';')[0];
+        const existing = relayCookies.get(domain) || '';
+        if (existing) {
+          const cookieName = cookiePart.split('=')[0];
+          const updated = existing
+            .split(';')
+            .filter(c => c.trim().startsWith(cookieName + '='))
+            .concat(cookiePart)
+            .join('; ');
+          relayCookies.set(domain, updated);
+        } else {
+          relayCookies.set(domain, cookiePart);
+        }
+      }
 
       const data: { status: number; ok: boolean; json?: unknown; text?: string } = {
         status: response.status,

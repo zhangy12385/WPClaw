@@ -17,7 +17,7 @@ import {
   Terminal,
   ExternalLink,
   Trash2,
-  Cpu,
+  User,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { rendererExtensionRegistry } from '@/extensions/registry';
@@ -216,7 +216,6 @@ export function Sidebar() {
   const extraNavItems = rendererExtensionRegistry.getExtraNavItems();
 
   const coreNavItems = [
-    { to: '/models', icon: <Cpu className="h-[18px] w-[18px]" strokeWidth={2} />, label: t('sidebar.models'), testId: 'sidebar-nav-models' },
     { to: '/agents', icon: <Bot className="h-[18px] w-[18px]" strokeWidth={2} />, label: t('sidebar.agents'), testId: 'sidebar-nav-agents' },
     { to: '/channels', icon: <Network className="h-[18px] w-[18px]" strokeWidth={2} />, label: t('sidebar.channels'), testId: 'sidebar-nav-channels' },
     { to: '/skills', icon: <Puzzle className="h-[18px] w-[18px]" strokeWidth={2} />, label: t('sidebar.skills'), testId: 'sidebar-nav-skills' },
@@ -398,6 +397,29 @@ export function Sidebar() {
             )}
           </Button>
         )}
+
+        {/* Personal Center */}
+        <NavLink
+          to="/personal-center"
+          data-testid="sidebar-nav-personal-center"
+          className={({ isActive }) =>
+            cn(
+              'flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-[14px] font-medium transition-colors mt-1',
+              'hover:bg-black/5 dark:hover:bg-white/5 text-foreground/80',
+              isActive && 'bg-black/5 dark:bg-white/10 text-foreground',
+              sidebarCollapsed ? 'justify-center px-0' : ''
+            )
+          }
+        >
+          {({ isActive }) => (
+            <>
+              <div className={cn("flex shrink-0 items-center justify-center", isActive ? "text-foreground" : "text-muted-foreground")}>
+                <User className="h-[18px] w-[18px]" strokeWidth={2} />
+              </div>
+              {!sidebarCollapsed && <span className="flex-1 overflow-hidden text-ellipsis whitespace-nowrap">{t('sidebar.personalCenter')}</span>}
+            </>
+          )}
+        </NavLink>
       </div>
 
       <ConfirmDialog

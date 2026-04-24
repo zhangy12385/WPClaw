@@ -24,6 +24,7 @@ import { buildOpenClawControlUiUrl } from '../utils/openclaw-control-ui';
 import { logger } from '../utils/logger';
 import { resolveAgentIdFromChannel } from '../utils/agent-config';
 import { resolveAccountIdFromSessionHistory } from '../utils/session-util';
+import { saveUserSession, loadUserSession, clearUserSession } from '../utils/user-session';
 import {
   saveChannelConfig,
   getChannelConfig,
@@ -50,7 +51,7 @@ import { applyProxySettings } from './proxy';
 import { syncLaunchAtStartupSettingFromStore } from './launch-at-startup';
 import { proxyAwareFetch } from '../utils/proxy-fetch';
 import { getRecentTokenUsageHistory } from '../utils/token-usage';
-import { getProviderService } from '../services/providers/provider-service';
+import { getProviderService, saveRelayStationConfig, updateRelayStationModel } from '../services/providers/provider-service';
 import {
   getOpenClawProviderKey,
   syncDefaultProviderToRuntime,
@@ -2050,6 +2051,163 @@ function registerProviderHandlers(gatewayManager: GatewayManager): void {
       }
     }
   );
+
+  // Save relay station configuration
+  ipcMain.handle('provider:saveRelayStation', async (_, url: string, apiKey: string, model: string) => {
+    try {
+      const result = await saveRelayStationConfig(url, apiKey, model);
+
+      // Write API key to OpenClaw auth-profiles.json
+      try {
+        await syncProviderApiKeyToRuntime('custom', 'relay-station', apiKey);
+      } catch (err) {
+        console.warn('[provider:saveRelayStation] Failed to sync key to OpenClaw auth-profiles:', err);
+      }
+
+      // Properly register the provider with its config (creates models.json, etc.)
+      try {
+        const providerService = getProviderService();
+        const account = await providerService.getAccount('relay-station');
+        if (account) {
+          const config = {
+            id: account.id,
+            name: account.label,
+            type: account.vendorId as ProviderConfig['type'],
+            baseUrl: url,
+            model,
+            apiProtocol: account.apiProtocol as 'openai-completions' | 'openai-responses' | 'anthropic-messages',
+            enabled: true,
+            createdAt: account.createdAt,
+            updatedAt: new Date().toISOString(),
+          };
+          await syncSavedProviderToRuntime(config, apiKey, gatewayManager);
+        }
+      } catch (err) {
+        console.warn('[provider:saveRelayStation] Failed to sync provider to runtime:', err);
+      }
+
+      // Sync as default provider
+      try {
+        await syncDefaultProviderToRuntime('relay-station', gatewayManager);
+      } catch (err) {
+        console.warn('[provider:saveRelayStation] Failed to sync default provider to OpenClaw:', err);
+      }
+
+      return result;
+    } catch (error) {
+      return { success: false, error: String(error) };
+    }
+  });
+
+  // Set relay station model
+  ipcMain.handle('provider:setRelayStationModel', async (_, model: string) => {
+    console.log('[provider:setRelayStationModel] Called with model:', model);
+    try {
+      const result = await updateRelayStationModel(model);
+      console.log('[provider:setRelayStationModel] updateRelayStationModel result:', result);
+
+      if (result.success) {
+        try {
+          const providerService = getProviderService();
+          const account = await providerService.getAccount('relay-station');
+          if (account) {
+            const { getApiKey } = await import('../utils/secure-storage');
+            const apiKey = await getApiKey('relay-station');
+            const config = {
+              id: account.id,
+              name: account.label,
+              type: account.vendorId as ProviderConfig['type'],
+              baseUrl: account.baseUrl || 'https://www.wangpai.one',
+              model: model,
+              apiProtocol: account.apiProtocol as 'openai-completions' | 'openai-responses' | 'anthropic-messages',
+              enabled: true,
+              createdAt: account.createdAt,
+              updatedAt: new Date().toISOString(),
+            };
+            await syncUpdatedProviderToRuntime(config, apiKey, gatewayManager);
+            gatewayManager?.debouncedRestart(2000);
+          }
+        } catch (err) {
+          console.warn('[provider:setRelayStationModel] Failed to sync provider to runtime:', err);
+        }
+      }
+
+      return result;
+    } catch (error) {
+      console.error('[provider:setRelayStationModel] Unhandled error:', error);
+      return { success: false, error: String(error) };
+    }
+  });
+
+  // Get relay station model
+  ipcMain.handle('provider:getRelayStationModel', async () => {
+    try {
+      const providerService = getProviderService();
+      const account = await providerService.getAccount('relay-station');
+      return { model: account?.model || 'MiniMax-M2.7', success: true };
+    } catch (error) {
+      return { model: 'MiniMax-M2.7', success: false, error: String(error) };
+    }
+  });
+
+  // Get relay station usage (balance and token usage)
+  // Uses new-api /dashboard/billing/* endpoints
+  ipcMain.handle('provider:getRelayStationUsage', async () => {
+    try {
+      const { getApiKey } = await import('../utils/secure-storage');
+      const apiKey = await getApiKey('relay-station');
+      if (!apiKey) {
+        return { success: false, error: 'API key not found' };
+      }
+
+      const providerService = getProviderService();
+      const account = await providerService.getAccount('relay-station');
+      const baseUrl = account?.baseUrl;
+      if (!baseUrl) {
+        return { success: false, error: 'Relay station not configured' };
+      }
+      const normalizedBaseUrl = baseUrl.replace(/\/$/, '');
+
+      const subscriptionUrl = `${normalizedBaseUrl}/dashboard/billing/subscription`;
+      const usageUrl = `${normalizedBaseUrl}/dashboard/billing/usage`;
+
+      const fetchWithAuth = async (url: string) => {
+        const response = await fetch(url, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${apiKey}`,
+            'Content-Type': 'application/json',
+          },
+        });
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+        return response.json();
+      };
+
+      const [subscriptionData, usageData] = await Promise.all([
+        fetchWithAuth(subscriptionUrl),
+        fetchWithAuth(usageUrl),
+      ]);
+
+      const totalQuota = (subscriptionData.hard_limit_usd || 0);
+      const totalUsed = (usageData.total_usage || 0) / 100;
+      const remaining = Math.max(0, totalQuota - totalUsed);
+      const balance = totalQuota;
+
+      return {
+        success: true,
+        data: {
+          balance,
+          remaining,
+          totalUsed,
+          unit: 'USD',
+        },
+      };
+    } catch (error) {
+      return { success: false, error: String(error) };
+    }
+  });
 }
 
 /**
@@ -2627,5 +2785,21 @@ function registerSessionHandlers(): void {
       logger.error(`[session:delete] Unexpected error for ${sessionKey}:`, err);
       return { success: false, error: String(err) };
     }
+  });
+
+  // User session handlers for personal center
+  ipcMain.handle('user:saveSession', async (_, data) => {
+    saveUserSession(data);
+    return { success: true };
+  });
+
+  ipcMain.handle('user:loadSession', async () => {
+    const data = loadUserSession();
+    return { success: true, data };
+  });
+
+  ipcMain.handle('user:clearSession', async () => {
+    clearUserSession();
+    return { success: true };
   });
 }

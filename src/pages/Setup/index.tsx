@@ -28,6 +28,7 @@ import { SUPPORTED_LANGUAGES } from '@/i18n';
 import { toast } from 'sonner';
 import { invokeIpc } from '@/lib/api-client';
 import { hostApiFetch } from '@/lib/host-api';
+import { AccountStep } from './steps/AccountStep';
 
 interface SetupStep {
   id: string;
@@ -38,8 +39,9 @@ interface SetupStep {
 const STEP = {
   WELCOME: 0,
   RUNTIME: 1,
-  INSTALLING: 2,
-  COMPLETE: 3,
+  ACCOUNT: 2,
+  INSTALLING: 3,
+  COMPLETE: 4,
 } as const;
 
 const getSteps = (t: TFunction): SetupStep[] => [
@@ -52,6 +54,11 @@ const getSteps = (t: TFunction): SetupStep[] => [
     id: 'runtime',
     title: t('steps.runtime.title'),
     description: t('steps.runtime.description'),
+  },
+  {
+    id: 'account',
+    title: t('steps.account.title'),
+    description: t('steps.account.description'),
   },
   {
     id: 'installing',
@@ -91,6 +98,8 @@ export function Setup() {
   const [currentStep, setCurrentStep] = useState<number>(STEP.WELCOME);
 
   // Setup state
+  const [accountConfigured, setAccountConfigured] = useState(false);
+  const [, setSelectedModel] = useState('');
   // Installation state for the Installing step
   const [installedSkills, setInstalledSkills] = useState<string[]>([]);
   // Runtime check status
@@ -113,6 +122,8 @@ export function Setup() {
         return true;
       case STEP.RUNTIME:
         return runtimeChecksPassed;
+      case STEP.ACCOUNT:
+        return accountConfigured;
       case STEP.INSTALLING:
         return false; // Cannot manually proceed, auto-proceeds when done
       case STEP.COMPLETE:
@@ -120,7 +131,7 @@ export function Setup() {
       default:
         return true;
     }
-  }, [safeStepIndex, runtimeChecksPassed]);
+  }, [safeStepIndex, accountConfigured, runtimeChecksPassed]);
 
   const handleNext = async () => {
     if (isLastStep) {
@@ -208,6 +219,12 @@ export function Setup() {
             <div className="rounded-xl bg-card text-card-foreground border shadow-sm p-8 mb-8">
               {safeStepIndex === STEP.WELCOME && <WelcomeContent />}
               {safeStepIndex === STEP.RUNTIME && <RuntimeContent onStatusChange={setRuntimeChecksPassed} />}
+              {safeStepIndex === STEP.ACCOUNT && (
+                <AccountStep
+                  onConfigured={setAccountConfigured}
+                  onModelChange={setSelectedModel}
+                />
+              )}
               {safeStepIndex === STEP.INSTALLING && (
                 <InstallingContent
                   skills={getDefaultSkills(t)}
@@ -234,7 +251,7 @@ export function Setup() {
                   )}
                 </div>
                 <div className="flex gap-2">
-                  {!isLastStep && safeStepIndex !== STEP.RUNTIME && (
+                  {!isLastStep && safeStepIndex !== STEP.RUNTIME && safeStepIndex !== STEP.ACCOUNT && (
                     <Button data-testid="setup-skip-button" variant="ghost" onClick={handleSkip}>
                       {t('nav.skipSetup')}
                     </Button>

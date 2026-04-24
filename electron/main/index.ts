@@ -43,6 +43,7 @@ import { ensureBuiltinSkillsInstalled, ensurePreinstalledSkillsInstalled } from 
 
 import { startHostApiServer } from '../api/server';
 import { HostEventBus } from '../api/event-bus';
+import { initializePortableData } from '../utils/data-init';
 import { deviceOAuthManager } from '../utils/device-oauth';
 import { browserOAuthManager } from '../utils/browser-oauth';
 import { whatsAppLoginManager } from '../utils/whatsapp-login';
@@ -557,6 +558,14 @@ if (gotTheLock) {
 
     logger.debug('Main window is not ready yet; deferring second-instance focus until ready-to-show');
   });
+
+  // Initialize portable mode before app is ready
+  const initResult = initializePortableData();
+  if (!initResult.success) {
+    console.warn('[main] Portable mode initialization failed:', initResult.error);
+  } else {
+    console.log('[main] Portable mode initialized, data dir:', initResult.dataDir);
+  }
 
   // Application lifecycle
   app.whenReady().then(() => {
