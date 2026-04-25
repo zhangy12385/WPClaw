@@ -57,6 +57,15 @@ if (isE2EMode && requestedUserDataDir) {
   app.setPath('userData', requestedUserDataDir);
 }
 
+// Initialize portable mode BEFORE any module imports that use homedir()
+// This must happen at module level, before app.whenReady()
+const initResult = initializePortableData();
+if (!initResult.success) {
+  console.warn('[main] Portable mode initialization failed:', initResult.error);
+} else {
+  console.log('[main] Portable mode initialized, data dir:', initResult.dataDir);
+}
+
 // Disable GPU hardware acceleration globally for maximum stability across
 // all GPU configurations (no GPU, integrated, discrete).
 //
@@ -559,14 +568,6 @@ if (gotTheLock) {
 
     logger.debug('Main window is not ready yet; deferring second-instance focus until ready-to-show');
   });
-
-  // Initialize portable mode before app is ready
-  const initResult = initializePortableData();
-  if (!initResult.success) {
-    console.warn('[main] Portable mode initialization failed:', initResult.error);
-  } else {
-    console.log('[main] Portable mode initialized, data dir:', initResult.dataDir);
-  }
 
   // Application lifecycle
   app.whenReady().then(() => {

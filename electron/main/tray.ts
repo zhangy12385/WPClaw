@@ -57,7 +57,7 @@ export function createTray(mainWindow: BrowserWindow): Tray {
   tray = new Tray(icon);
   
   // Set tooltip
-  tray.setToolTip('ClawX - AI 助理');
+  tray.setToolTip('WPClaw - AI 助理');
 
   const showWindow = () => {
     if (mainWindow.isDestroyed()) return;
@@ -68,7 +68,7 @@ export function createTray(mainWindow: BrowserWindow): Tray {
   // Create context menu
   const contextMenu = Menu.buildFromTemplate([
     {
-      label: '打开ClawX',
+      label: '打开WPClaw',
       click: showWindow,
     },
     {
@@ -112,7 +112,7 @@ export function createTray(mainWindow: BrowserWindow): Tray {
       type: 'separator',
     },
     {
-      label: '退出 ClawX',
+      label: '退出 WPClaw',
       click: () => {
         app.quit();
       },

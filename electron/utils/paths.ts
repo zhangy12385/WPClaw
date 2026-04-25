@@ -49,6 +49,8 @@ export function expandPath(path: string): string {
 
 /**
  * Get OpenClaw config directory
+ * NOTE: homedir() is called at runtime, not module load time, so portable mode
+ * can override it via HOME env var before this function is first called.
  */
 export function getOpenClawConfigDir(): string {
   return join(homedir(), '.openclaw');

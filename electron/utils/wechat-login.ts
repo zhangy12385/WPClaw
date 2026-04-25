@@ -6,18 +6,27 @@ import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { deflateSync } from 'node:zlib';
 import { normalizeOpenClawAccountId } from './channel-alias';
-import { getOpenClawResolvedDir } from './paths';
+import { getOpenClawConfigDir, getOpenClawResolvedDir } from './paths';
 
 export const DEFAULT_WECHAT_BASE_URL = 'https://ilinkai.weixin.qq.com';
 const DEFAULT_ILINK_BOT_TYPE = '3';
 const ACTIVE_LOGIN_TTL_MS = 5 * 60_000;
 const QR_POLL_TIMEOUT_MS = 35_000;
 const MAX_QR_REFRESH_COUNT = 3;
-const OPENCLAW_DIR = join(homedir(), '.openclaw');
-const WECHAT_STATE_DIR = join(OPENCLAW_DIR, 'openclaw-weixin');
-const WECHAT_ACCOUNT_INDEX_FILE = join(WECHAT_STATE_DIR, 'accounts.json');
-const WECHAT_ACCOUNTS_DIR = join(WECHAT_STATE_DIR, 'accounts');
-const require = createRequire(import.meta.url);
+
+// Lazy getter so portable mode can override via HOME env var BEFORE first call
+function getOpenClawDir(): string {
+  return getOpenClawConfigDir();
+}
+function getWechatStateDir(): string {
+  return join(getOpenClawDir(), 'openclaw-weixin');
+}
+function getWechatAccountIndexFile(): string {
+  return join(getWechatStateDir(), 'accounts.json');
+}
+function getWechatAccountsDir(): string {
+  return join(getWechatStateDir(), 'accounts');
+}
 
 type QrCodeMatrix = {
   addData(input: string): void;
@@ -211,7 +220,7 @@ function isLoginFresh(login: ActiveLogin): boolean {
 function resolveConfigPath(): string {
   const envPath = process.env.OPENCLAW_CONFIG?.trim();
   if (envPath) return envPath;
-  return join(OPENCLAW_DIR, 'openclaw.json');
+  return join(getOpenClawDir(), 'openclaw.json');
 }
 
 function loadWeChatRouteTag(accountId?: string): string | undefined {
@@ -290,7 +299,7 @@ async function pollWeChatQrStatus(apiBaseUrl: string, qrcode: string, accountId?
 
 async function readAccountIndex(): Promise<string[]> {
   try {
-    const raw = await readFile(WECHAT_ACCOUNT_INDEX_FILE, 'utf-8');
+    const raw = await readFile(getWechatAccountIndexFile(), 'utf-8');
     const parsed = JSON.parse(raw);
     if (!Array.isArray(parsed)) return [];
     return parsed.filter((entry): entry is string => typeof entry === 'string' && entry.trim().length > 0);
@@ -300,8 +309,8 @@ async function readAccountIndex(): Promise<string[]> {
 }
 
 async function writeAccountIndex(accountIds: string[]): Promise<void> {
-  await mkdir(WECHAT_STATE_DIR, { recursive: true });
-  await writeFile(WECHAT_ACCOUNT_INDEX_FILE, JSON.stringify(accountIds, null, 2), 'utf-8');
+  await mkdir(getWechatStateDir(), { recursive: true });
+  await writeFile(getWechatAccountIndexFile(), JSON.stringify(accountIds, null, 2), 'utf-8');
 }
 
 export async function saveWeChatAccountState(rawAccountId: string, payload: {
@@ -309,10 +318,13 @@ export async function saveWeChatAccountState(rawAccountId: string, payload: {
   baseUrl?: string;
   userId?: string;
 }): Promise<string> {
+  console.log('[wechat-login] homedir():', homedir());
+  console.log('[wechat-login] getWechatStateDir():', getWechatStateDir());
+  console.log('[wechat-login] getWechatAccountsDir():', getWechatAccountsDir());
   const accountId = normalizeOpenClawAccountId(rawAccountId);
-  await mkdir(WECHAT_ACCOUNTS_DIR, { recursive: true });
+  await mkdir(getWechatAccountsDir(), { recursive: true });
 
-  const filePath = join(WECHAT_ACCOUNTS_DIR, `${accountId}.json`);
+  const filePath = join(getWechatAccountsDir(), `${accountId}.json`);
   const data = {
     token: payload.token.trim(),
     savedAt: new Date().toISOString(),
@@ -467,5 +479,5 @@ export async function cancelWeChatLoginSession(sessionKey?: string): Promise<voi
 
 export async function clearWeChatLoginState(): Promise<void> {
   activeLogins.clear();
-  await rm(WECHAT_STATE_DIR, { recursive: true, force: true });
+  await rm(getWechatStateDir(), { recursive: true, force: true });
 }
