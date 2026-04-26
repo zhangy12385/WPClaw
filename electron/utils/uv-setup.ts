@@ -23,6 +23,84 @@ function getBundledUvPath(): string {
 }
 
 /**
+ * Get the path to the bundled Python directory for the current platform
+ */
+export function getBundledPythonPath(): string {
+  const platform = process.platform;
+  const arch = process.arch;
+  const target = `${platform}-${arch}`;
+
+  if (app.isPackaged) {
+    return join(process.resourcesPath, 'python', target);
+  } else {
+    return join(process.cwd(), 'resources', 'python', target);
+  }
+}
+
+/**
+ * Check if bundled Python is available and ready to use
+ */
+export function isBundledPythonReady(): boolean {
+  const pythonDir = getBundledPythonPath();
+  if (!existsSync(pythonDir)) {
+    return false;
+  }
+
+  // Check for python executable
+  const pythonExe = process.platform === 'win32'
+    ? join(pythonDir, 'python.exe')
+    : join(pythonDir, 'bin', 'python3');
+
+  if (!existsSync(pythonExe)) {
+    return false;
+  }
+
+  return true;
+}
+
+/**
+ * Get the path to the bundled python executable
+ */
+export function getBundledPythonExe(): string | null {
+  if (!isBundledPythonReady()) {
+    return null;
+  }
+
+  const pythonDir = getBundledPythonPath();
+  return process.platform === 'win32'
+    ? join(pythonDir, 'python.exe')
+    : join(pythonDir, 'bin', 'python3');
+}
+
+/**
+ * Check if a managed Python 3.12 is ready and accessible
+ */
+export async function isPythonReady(): Promise<boolean> {
+  // First check bundled Python
+  if (isBundledPythonReady()) {
+    logger.debug('Python ready: using bundled Python');
+    return true;
+  }
+
+  // Fall back to uv's managed Python
+  const { bin: uvBin } = resolveUvBin();
+  const useShell = needsWinShell(uvBin);
+
+  return new Promise<boolean>((resolve) => {
+    try {
+      const child = spawn(useShell ? quoteForCmd(uvBin) : uvBin, ['python', 'find', '3.12'], {
+        shell: useShell,
+        windowsHide: true,
+      });
+      child.on('close', (code) => resolve(code === 0));
+      child.on('error', () => resolve(false));
+    } catch {
+      resolve(false);
+    }
+  });
+}
+
+/**
  * Resolve the best uv binary to use.
  *
  * In packaged mode we always prefer the bundled binary so we never accidentally
@@ -82,27 +160,6 @@ export async function installUv(): Promise<void> {
     throw new Error(`uv not found in system PATH and bundled binary missing at ${bin}`);
   }
   logger.info('uv is available and ready to use');
-}
-
-/**
- * Check if a managed Python 3.12 is ready and accessible
- */
-export async function isPythonReady(): Promise<boolean> {
-  const { bin: uvBin } = resolveUvBin();
-  const useShell = needsWinShell(uvBin);
-
-  return new Promise<boolean>((resolve) => {
-    try {
-      const child = spawn(useShell ? quoteForCmd(uvBin) : uvBin, ['python', 'find', '3.12'], {
-        shell: useShell,
-        windowsHide: true,
-      });
-      child.on('close', (code) => resolve(code === 0));
-      child.on('error', () => resolve(false));
-    } catch {
-      resolve(false);
-    }
-  });
 }
 
 /**
@@ -170,10 +227,20 @@ async function runPythonInstall(
 /**
  * Use bundled uv to install a managed Python version (default 3.12).
  *
- * Tries with mirror env first (for CN region), then retries without mirror
+ * If bundled Python is available (from resources/python/<target>/), skip
+ * installation and use it directly.
+ *
+ * Otherwise tries with mirror env first (for CN region), then retries without mirror
  * if the first attempt fails, to rule out mirror-specific issues.
  */
 export async function setupManagedPython(): Promise<void> {
+  // Check if bundled Python is available first
+  if (isBundledPythonReady()) {
+    const bundledPath = getBundledPythonPath();
+    logger.info(`Using bundled Python at: ${bundledPath}`);
+    return;
+  }
+
   const { bin: uvBin, source } = resolveUvBin();
   const uvEnv = await getUvMirrorEnv();
   const hasMirror = Object.keys(uvEnv).length > 0;

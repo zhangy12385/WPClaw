@@ -3,7 +3,7 @@ import path from 'path';
 import { existsSync } from 'fs';
 import { getOpenClawDir, getOpenClawEntryPath } from '../utils/paths';
 import { getUvMirrorEnv } from '../utils/uv-env';
-import { isPythonReady, setupManagedPython } from '../utils/uv-setup';
+import { isPythonReady, setupManagedPython, getBundledPythonPath } from '../utils/uv-setup';
 import { logger } from '../utils/logger';
 import { prependPathEntry } from '../utils/env-path';
 import { probeGatewayReady } from './ws-client';
@@ -278,14 +278,24 @@ export async function runOpenClawDoctorRepair(): Promise<boolean> {
     : path.join(process.cwd(), 'resources', 'bin', target);
   const binPathExists = existsSync(binPath);
   const baseProcessEnv = process.env as Record<string, string | undefined>;
-  const baseEnvPatched = binPathExists
-    ? prependPathEntry(baseProcessEnv, binPath).env
-    : baseProcessEnv;
+  let baseEnvPatched = baseProcessEnv;
+
+  // Prepend bundled bin (uv) to PATH
+  if (binPathExists) {
+    baseEnvPatched = prependPathEntry(baseEnvPatched, binPath).env;
+  }
+
+  // Prepend bundled Python to PATH
+  const pythonPath = getBundledPythonPath();
+  const pythonPathExists = existsSync(pythonPath);
+  if (pythonPathExists) {
+    baseEnvPatched = prependPathEntry(baseEnvPatched, pythonPath).env;
+  }
 
   const uvEnv = await getUvMirrorEnv();
   const doctorArgs = ['doctor', '--fix', '--yes', '--non-interactive'];
   logger.info(
-    `Running OpenClaw doctor repair (entry="${entryScript}", args="${doctorArgs.join(' ')}", cwd="${openclawDir}", bundledBin=${binPathExists ? 'yes' : 'no'})`,
+    `Running OpenClaw doctor repair (entry="${entryScript}", args="${doctorArgs.join(' ')}", cwd="${openclawDir}", bundledBin=${binPathExists ? 'yes' : 'no'}, bundledPython=${pythonPathExists ? 'yes' : 'no'})`,
   );
 
   return await new Promise<boolean>((resolve) => {

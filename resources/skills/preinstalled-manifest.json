@@ -1,6 +1,14 @@
 {
   "skills": [
     {
+      "slug": "akshare-stock",
+      "repo": "local",
+      "repoPath": "akshare-stock",
+      "ref": "local",
+      "version": "local",
+      "autoEnable": true
+    },
+    {
       "slug": "pdf",
       "repo": "anthropics/skills",
       "repoPath": "skills/pdf",

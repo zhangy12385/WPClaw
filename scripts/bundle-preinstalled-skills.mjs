@@ -1,7 +1,7 @@
 #!/usr/bin/env zx
 
 import 'zx/globals';
-import { readFileSync, existsSync, mkdirSync, rmSync, cpSync, writeFileSync } from 'node:fs';
+import { readFileSync, existsSync, mkdirSync, rmSync, cpSync, writeFileSync, readdirSync } from 'node:fs';
 import { join, dirname, basename } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -120,7 +120,40 @@ const lock = {
   skills: [],
 };
 
-const groups = groupByRepoRef(manifestSkills);
+// Copy local skills from resources/skills/ (excluding manifest and lock files)
+const LOCAL_SKILLS_SOURCE = join(ROOT, 'resources', 'skills');
+const LOCAL_SKILLS_SKIP = new Set(['preinstalled-manifest.json', 'bundles.json', '.preinstalled-lock.json']);
+
+if (existsSync(LOCAL_SKILLS_SOURCE)) {
+  for (const entry of readdirSync(LOCAL_SKILLS_SOURCE, { withFileTypes: true })) {
+    if (!entry.isDirectory()) continue;
+    if (LOCAL_SKILLS_SKIP.has(entry.name)) continue;
+
+    const sourceDir = join(LOCAL_SKILLS_SOURCE, entry.name);
+    const targetDir = join(OUTPUT_ROOT, entry.name);
+    const skillManifest = join(sourceDir, 'SKILL.md');
+
+    if (!existsSync(skillManifest)) {
+      echo`⚠️  Skipping ${entry.name}: no SKILL.md found`;
+      continue;
+    }
+
+    cpSync(sourceDir, targetDir, { recursive: true, dereference: true });
+    lock.skills.push({
+      slug: entry.name,
+      version: 'local',
+      repo: 'local',
+      repoPath: entry.name,
+      ref: 'local',
+      commit: 'local',
+    });
+    echo`   OK ${entry.name} (local)`;
+  }
+}
+
+// Filter out local skills — they were already copied above
+const remoteSkills = manifestSkills.filter((s) => s.repo !== 'local');
+const groups = groupByRepoRef(remoteSkills);
 for (const group of groups) {
   const repoDir = join(TMP_ROOT, createRepoDirName(group.repo, group.ref));
   const sparsePaths = [...new Set(group.entries.map((entry) => entry.repoPath))];

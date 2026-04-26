@@ -20,6 +20,7 @@ import { getApiKey, getDefaultProvider, getProvider } from '../utils/secure-stor
 import { getProviderEnvVar, getKeyableProviderTypes } from '../utils/provider-registry';
 import { getOpenClawDir, getOpenClawEntryPath, isOpenClawPresent } from '../utils/paths';
 import { getUvMirrorEnv } from '../utils/uv-env';
+import { getBundledPythonPath } from '../utils/uv-setup';
 import { cleanupDanglingWeChatPluginState, listConfiguredChannelsFromConfig, readOpenClawConfig } from '../utils/channel-config';
 import { sanitizeOpenClawConfig, batchSyncConfigFields } from '../utils/openclaw-auth';
 import { buildProxyEnv, resolveProxySettings } from '../utils/proxy';
@@ -38,6 +39,7 @@ export interface GatewayLaunchContext {
   forkEnv: Record<string, string | undefined>;
   mode: 'dev' | 'packaged';
   binPathExists: boolean;
+  pythonPathExists: boolean;
   loadedProviderKeyCount: number;
   proxySummary: string;
   channelStartupSummary: string;
@@ -430,9 +432,19 @@ export async function prepareGatewayLaunchContext(port: number): Promise<Gateway
 
   const { NODE_OPTIONS: _nodeOptions, ...baseEnv } = process.env;
   const baseEnvRecord = baseEnv as Record<string, string | undefined>;
-  const baseEnvPatched = binPathExists
-    ? prependPathEntry(baseEnvRecord, binPath).env
-    : baseEnvRecord;
+  let baseEnvPatched = baseEnvRecord;
+
+  // Prepend bundled bin (uv) to PATH
+  if (binPathExists) {
+    baseEnvPatched = prependPathEntry(baseEnvPatched, binPath).env;
+  }
+
+  // Prepend bundled Python to PATH
+  const pythonPath = getBundledPythonPath();
+  const pythonPathExists = existsSync(pythonPath);
+  if (pythonPathExists) {
+    baseEnvPatched = prependPathEntry(baseEnvPatched, pythonPath).env;
+  }
   const forkEnv: Record<string, string | undefined> = {
     ...stripSystemdSupervisorEnv(baseEnvPatched),
     ...providerEnv,
@@ -457,6 +469,7 @@ export async function prepareGatewayLaunchContext(port: number): Promise<Gateway
     forkEnv,
     mode,
     binPathExists,
+    pythonPathExists,
     loadedProviderKeyCount,
     proxySummary,
     channelStartupSummary,

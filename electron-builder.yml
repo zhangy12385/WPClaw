@@ -21,6 +21,7 @@ extraResources:
       - "!icons/*.md"
       - "!icons/*.svg"
       - "!bin/**"
+      - "!python/**"
       - "!screenshot/**"
   # OpenClaw package (node_modules copied separately by afterPack hook
   # because electron-builder respects .gitignore which excludes node_modules/)
@@ -66,6 +67,8 @@ mac:
   extraResources:
     - from: resources/bin/darwin-${arch}
       to: bin
+    - from: resources/python/darwin-${arch}
+      to: python
     - from: resources/cli/posix/
       to: cli/
   category: public.app-category.productivity
@@ -117,6 +120,8 @@ win:
   extraResources:
     - from: resources/bin/win32-${arch}
       to: bin
+    - from: resources/python/win32-${arch}
+      to: python
     - from: resources/cli/win32/
       to: cli/
   icon: resources/icons/icon.ico
@@ -145,6 +150,8 @@ linux:
   extraResources:
     - from: resources/bin/linux-${arch}
       to: bin
+    - from: resources/python/linux-${arch}
+      to: python
     - from: resources/cli/posix/
       to: cli/
   icon: resources/icons
