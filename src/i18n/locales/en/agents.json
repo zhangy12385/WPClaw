@@ -72,6 +72,25 @@
         "channelAssigned": "{{channel}} assigned to agent",
         "channelAssignFailed": "Failed to assign channel: {{error}}",
         "channelRemoved": "{{channel}} removed",
-        "channelRemoveFailed": "Failed to remove channel: {{error}}"
-    }
+        "channelRemoveFailed": "Failed to remove channel: {{error}}",
+        "roleApplied": "Role applied successfully",
+        "roleApplyFailed": "Failed to apply role: {{error}}"
+    },
+    "rolesTitle": "Roles",
+    "rolesSubtitle": "Choose a preset role to赋予 your agent a specific personality and expertise.",
+    "noRoles": "No roles available",
+    "noRolesDesc": "Role files could not be loaded.",
+    "noSearchResults": "No matching roles",
+    "noSearchResultsDesc": "Try adjusting your search terms.",
+    "applyRoleDialog": {
+        "title": "Apply Role",
+        "description": "Apply \"{{roleName}}\" to an agent. This will copy role files to the agent's workspace.",
+        "roleDescription": "Role Description",
+        "selectAgent": "Select Agent",
+        "addressAs": "How to Address",
+        "addressAsPlaceholder": "e.g., Professor, Doctor, Assistant",
+        "addressToMe": "How It Addresses You",
+        "addressToMePlaceholder": "e.g., Student, Friend, Boss"
+    },
+    "applying": "Applying..."
 }

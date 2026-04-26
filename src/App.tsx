@@ -18,6 +18,7 @@ import { Cron } from './pages/Cron';
 import { PersonalCenter } from './pages/PersonalCenter';
 import { Settings } from './pages/Settings';
 import { Setup } from './pages/Setup';
+import { Roles } from './pages/Roles';
 import { useSettingsStore } from './stores/settings';
 import { useGatewayStore } from './stores/gateway';
 import { useProviderStore } from './stores/providers';
@@ -192,6 +193,7 @@ function App() {
             <Route path="/channels" element={<Channels />} />
             <Route path="/skills" element={<Skills />} />
             <Route path="/cron" element={<Cron />} />
+            <Route path="/roles" element={<Roles />} />
             <Route path="/personal-center" element={<PersonalCenter />} />
             <Route path="/settings/*" element={<Settings />} />
             {extraRoutes.map((r) => (

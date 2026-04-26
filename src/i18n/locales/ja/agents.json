@@ -72,6 +72,25 @@
         "channelAssigned": "{{channel}} を Agent に割り当てました",
         "channelAssignFailed": "Channel の割り当てに失敗しました: {{error}}",
         "channelRemoved": "{{channel}} を削除しました",
-        "channelRemoveFailed": "Channel の削除に失敗しました: {{error}}"
-    }
+        "channelRemoveFailed": "Channel の削除に失敗しました: {{error}}",
+        "roleApplied": "役割を適用しました",
+        "roleApplyFailed": "役割の適用に失敗しました: {{error}}"
+    },
+    "rolesTitle": "役割",
+    "rolesSubtitle": "プリセットの役割を選択して、エージェントに特定の人格と専門知識を付与します。",
+    "noRoles": "利用可能な役割がありません",
+    "noRolesDesc": "役割ファイルを読み込めませんでした。",
+    "noSearchResults": "一致する役割がありません",
+    "noSearchResultsDesc": "検索語を調整してみてください。",
+    "applyRoleDialog": {
+        "title": "役割を適用",
+        "description": "「{{roleName}}」をエージェントに適用します。役割ファイルがエージェントのワークスペースにコピーされます。",
+        "roleDescription": "役割の説明",
+        "selectAgent": "エージェントを選択",
+        "addressAs": "呼び方",
+        "addressAsPlaceholder": "例：先生、ドクター、アシスタント",
+        "addressToMe": "あなたへの呼び方",
+        "addressToMePlaceholder": "例：学生、友人、社長"
+    },
+    "applying": "適用中..."
 }

@@ -18,6 +18,7 @@ import {
   ExternalLink,
   Trash2,
   User,
+  UserCircle,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { rendererExtensionRegistry } from '@/extensions/registry';
@@ -220,6 +221,7 @@ export function Sidebar() {
     { to: '/channels', icon: <Network className="h-[18px] w-[18px]" strokeWidth={2} />, label: t('sidebar.channels'), testId: 'sidebar-nav-channels' },
     { to: '/skills', icon: <Puzzle className="h-[18px] w-[18px]" strokeWidth={2} />, label: t('sidebar.skills'), testId: 'sidebar-nav-skills' },
     { to: '/cron', icon: <Clock className="h-[18px] w-[18px]" strokeWidth={2} />, label: t('sidebar.cronTasks'), testId: 'sidebar-nav-cron' },
+    { to: '/roles', icon: <UserCircle className="h-[18px] w-[18px]" strokeWidth={2} />, label: t('sidebar.roles'), testId: 'sidebar-nav-roles' },
   ];
 
   const navItems = [

@@ -72,6 +72,25 @@
         "channelAssigned": "{{channel}} назначен агенту",
         "channelAssignFailed": "Не удалось назначить канал: {{error}}",
         "channelRemoved": "{{channel}} удалён",
-        "channelRemoveFailed": "Не удалось удалить канал: {{error}}"
-    }
+        "channelRemoveFailed": "Не удалось удалить канал: {{error}}",
+        "roleApplied": "Роль успешно применена",
+        "roleApplyFailed": "Не удалось применить роль: {{error}}"
+    },
+    "rolesTitle": "Роли",
+    "rolesSubtitle": "Выберите предустановленную роль, чтобы наделить агента определённой личностью и экспертизой.",
+    "noRoles": "Нет доступных ролей",
+    "noRolesDesc": "Не удалось загрузить файлы ролей.",
+    "noSearchResults": "Нет подходящих ролей",
+    "noSearchResultsDesc": "Попробуйте изменить поисковый запрос.",
+    "applyRoleDialog": {
+        "title": "Применить роль",
+        "description": "Применить \"{{roleName}}\" к агенту. Файлы роли будут скопированы в рабочую область агента.",
+        "roleDescription": "Описание роли",
+        "selectAgent": "Выбрать агента",
+        "addressAs": "Как обращаться",
+        "addressAsPlaceholder": "например, Профессор, Доктор, Помощник",
+        "addressToMe": "Как оно обращается к вам",
+        "addressToMePlaceholder": "например, Студент, Друг, Начальник"
+    },
+    "applying": "Применение..."
 }

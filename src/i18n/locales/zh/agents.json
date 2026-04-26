@@ -72,6 +72,25 @@
         "channelAssigned": "{{channel}} 已分配给 Agent",
         "channelAssignFailed": "分配频道失败：{{error}}",
         "channelRemoved": "{{channel}} 已移除",
-        "channelRemoveFailed": "移除频道失败：{{error}}"
-    }
+        "channelRemoveFailed": "移除频道失败：{{error}}",
+        "roleApplied": "角色应用成功",
+        "roleApplyFailed": "应用角色失败：{{error}}"
+    },
+    "rolesTitle": "角色",
+    "rolesSubtitle": "选择预设角色为您的 Agent 赋予特定的人格和专业知识。",
+    "noRoles": "暂无可用角色",
+    "noRolesDesc": "无法加载角色文件。",
+    "noSearchResults": "没有匹配的角色",
+    "noSearchResultsDesc": "请尝试调整搜索关键词。",
+    "applyRoleDialog": {
+        "title": "应用角色",
+        "description": "将「{{roleName}}」应用到一个 Agent。这会将角色文件复制到 Agent 的工作区。",
+        "roleDescription": "角色描述",
+        "selectAgent": "选择 Agent",
+        "addressAs": "称呼方式",
+        "addressAsPlaceholder": "例如：教授、医生、助手",
+        "addressToMe": "它对你的称呼",
+        "addressToMePlaceholder": "例如：学生、朋友、老板"
+    },
+    "applying": "应用中..."
 }
