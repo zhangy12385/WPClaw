@@ -503,7 +503,7 @@ export class GatewayManager extends EventEmitter {
     if (!decision.allow) {
       const observability = this.restartGovernor.getObservability();
       logger.warn(
-        `[gateway-restart-governor] restart suppressed reason=${decision.reason} retryAfterMs=${decision.retryAfterMs} ` +
+        `[gateway-refresh] restart suppressed reason=${decision.reason} retryAfterMs=${decision.retryAfterMs} ` +
         `suppressed=${observability.suppressed_total} executed=${observability.executed_total} circuitOpenUntil=${observability.circuit_open_until}`,
       );
       const props = {
@@ -515,6 +515,20 @@ export class GatewayManager extends EventEmitter {
       };
       trackMetric('gateway.restart.suppressed', props);
       captureTelemetryEvent('gateway_restart_suppressed', props);
+      return;
+    }
+
+    // If the gateway was recently connected and is already running, the config
+    // it needs is already loaded — no need to stop/start again.  This prevents
+    // the restart loop triggered by provider saves on Windows where reload()
+    // falls back to restart() even though the gateway just started.
+    const connectedForMs = this.status.connectedAt
+      ? Date.now() - this.status.connectedAt
+      : Number.POSITIVE_INFINITY;
+    if (connectedForMs < 8000 && this.status.state === 'running') {
+      logger.info(
+        `[gateway-refresh] mode=restart skipped (recently connected, config already valid) connectedForMs=${Math.round(connectedForMs)}`,
+      );
       return;
     }
 
@@ -576,6 +590,10 @@ export class GatewayManager extends EventEmitter {
    * of each other during setup.
    */
   debouncedRestart(delayMs = 2000): void {
+    // Mark config as updated when debounced restart is scheduled, so that
+    // the deferred restart logic can skip it if the gateway already loaded
+    // the new config before the timer fires.
+    this.restartController.recordConfigUpdated();
     this.restartController.debouncedRestart(delayMs, () => {
       void this.restart().catch((err) => {
         logger.warn('Debounced Gateway restart failed:', err);

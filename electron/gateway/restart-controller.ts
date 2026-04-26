@@ -18,10 +18,20 @@ export class GatewayRestartController {
   private deferredRestartPending = false;
   private deferredRestartRequestedAt = 0;
   private lastRestartCompletedAt = 0;
+  private lastConfigUpdatedAt = 0;
   private restartDebounceTimer: NodeJS.Timeout | null = null;
 
   isRestartDeferred(context: RestartDeferralState): boolean {
     return shouldDeferRestart(context);
+  }
+
+  /**
+   * Record when a config change was made that would require a gateway restart.
+   * Used to skip deferred restarts when the running gateway already picked up
+   * the new config (e.g. provider save before deferred restart fires).
+   */
+  recordConfigUpdated(now = Date.now()): void {
+    this.lastConfigUpdatedAt = now;
   }
 
   markDeferredRestart(reason: string, context: RestartDeferralState): void {
@@ -82,6 +92,22 @@ export class GatewayRestartController {
         `Dropping deferred Gateway restart (${trigger}): a restart already completed after the request (requested=${requestedAt}, completed=${this.lastRestartCompletedAt})`,
       );
       return;
+    }
+
+    // If a config update happened after the last restart completed, the gateway
+    // is still running with stale config and needs to restart to pick up the
+    // new config.  Only skip the restart if the config was already current
+    // before the deferred restart was even requested.
+    if (this.lastConfigUpdatedAt > 0 && this.lastConfigUpdatedAt > this.lastRestartCompletedAt) {
+      if (requestedAt > 0 && this.lastConfigUpdatedAt > requestedAt) {
+        // Config changed after the restart request was made — restart needed
+        // to ensure the gateway picks up the configuration change.
+      } else {
+        logger.info(
+          `Dropping deferred Gateway restart (${trigger}): config was already current before request (requested=${requestedAt}, lastConfigUpdated=${this.lastConfigUpdatedAt}, lastRestartCompleted=${this.lastRestartCompletedAt})`,
+        );
+        return;
+      }
     }
 
     logger.info(`Executing deferred Gateway restart now (${trigger})`);
