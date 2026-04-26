@@ -264,11 +264,6 @@ export function Setup() {
                   )}
                 </div>
                 <div className="flex gap-2">
-                  {!isLastStep && safeStepIndex !== STEP.RUNTIME && safeStepIndex !== STEP.ACCOUNT && (
-                    <Button data-testid="setup-skip-button" variant="ghost" onClick={handleSkip}>
-                      {t('nav.skipSetup')}
-                    </Button>
-                  )}
                   <Button data-testid="setup-next-button" onClick={handleNext} disabled={!canProceed}>
                     {isLastStep ? (
                       t('nav.getStarted')

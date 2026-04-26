@@ -258,8 +258,8 @@ async function mergeClawXContextOnce(): Promise<number> {
   return skipped;
 }
 
-const RETRY_INTERVAL_MS = 2000;
-const MAX_RETRIES = 15;
+const RETRY_INTERVAL_MS = 3000;
+const MAX_RETRIES = 30;
 
 /**
  * Ensure ClawX context snippets are merged into the openclaw workspace
