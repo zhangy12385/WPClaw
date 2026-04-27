@@ -15,33 +15,52 @@ import { useChatStore } from '@/stores/chat';
 import { toast } from 'sonner';
 
 type QueryType = 'realtime' | 'kline' | 'financial' | 'fundflow' | 'lhb' | 'rzrq';
+type OutputPreference = 'concise' | 'detailed';
+
+const QUERY_TYPE_LABELS: Record<QueryType, string> = {
+  realtime: '实时行情',
+  kline: '历史K线',
+  financial: '财务数据',
+  fundflow: '资金流向',
+  lhb: '龙虎榜',
+  rzrq: '融资融券',
+};
+
+const OUTPUT_PREFERENCES: { value: OutputPreference; label: string }[] = [
+  { value: 'concise', label: '简洁摘要（重点风险与机会）' },
+  { value: 'detailed', label: '详细报告（含逐只股票说明）' },
+];
 
 function buildStockMessage(params: {
   stockCode: string;
   queryType: QueryType;
   dateRange?: string;
   adjustType?: string;
+  outputPreference: OutputPreference;
 }): string {
-  const { stockCode, queryType, dateRange, adjustType } = params;
-  switch (queryType) {
-    case 'realtime':
-      return `查询股票 ${stockCode} 的实时行情`;
-    case 'kline': {
-      const [start, end] = (dateRange || '').split('-');
-      const adj = adjustType && adjustType !== 'None' ? `，复权方式为${adjustType === 'qfq' ? '前复权' : '后复权'}` : '';
-      return `查询股票 ${stockCode} 从 ${start || '20240101'} 到 ${end || '20241231'} 的日K线数据${adj}`;
+  const { stockCode, queryType, dateRange, adjustType, outputPreference } = params;
+  const queryLabel = QUERY_TYPE_LABELS[queryType];
+  const outputLabel = OUTPUT_PREFERENCES.find(p => p.value === outputPreference)?.label ?? '简洁摘要（重点风险与机会）';
+
+  // 构建参数字符串
+  const parts: string[] = [`股票代码: ${stockCode}`, `查询类型: ${queryLabel}`];
+
+  if (queryType === 'kline') {
+    const [start, end] = (dateRange || '').split('-');
+    parts.push(`日期范围: ${start || '20240101'}-${end || '20241231'}`);
+    if (adjustType && adjustType !== 'None') {
+      parts.push(`复权方式: ${adjustType === 'qfq' ? '前复权' : '后复权'}`);
     }
-    case 'financial':
-      return `查询股票 ${stockCode} 的财务数据`;
-    case 'fundflow':
-      return `查询股票 ${stockCode} 的资金流向`;
-    case 'lhb':
-      return `查询股票 ${stockCode} 的龙虎榜数据`;
-    case 'rzrq':
-      return `查询股票 ${stockCode} 的融资融券数据`;
-    default:
-      return `查询股票 ${stockCode}`;
   }
+
+  const paramsStr = parts.join(' | ');
+
+  return (
+    `【A股量化工具】请调用「akshare-stock」技能获取A股数据。\n\n` +
+    `标的配置：\n${paramsStr}\n\n` +
+    `请结合 AkShare 数据汇总近期表现，并给出分析建议。\n` +
+    `输出偏好：${outputLabel}`
+  );
 }
 
 export function StockDetail() {
@@ -52,6 +71,7 @@ export function StockDetail() {
   const [queryType, setQueryType] = useState<QueryType>('realtime');
   const [dateRange, setDateRange] = useState('');
   const [adjustType, setAdjustType] = useState('None');
+  const [outputPreference, setOutputPreference] = useState<OutputPreference>('concise');
   const [selectedAgentId, setSelectedAgentId] = useState<string>('');
   const [sending, setSending] = useState(false);
 
@@ -74,6 +94,7 @@ export function StockDetail() {
         queryType,
         dateRange: isKline ? dateRange : undefined,
         adjustType: isKline ? adjustType : undefined,
+        outputPreference,
       });
       await useChatStore.getState().sendMessage(message, undefined, selectedAgentId);
       navigate('/');
@@ -173,6 +194,22 @@ export function StockDetail() {
                   {agents.map((agent) => (
                     <option key={agent.id} value={agent.id}>
                       {agent.name}
+                    </option>
+                  ))}
+                </Select>
+              </div>
+
+              {/* 输出偏好 */}
+              <div className="space-y-2">
+                <Label htmlFor="outputPreference">输出偏好</Label>
+                <Select
+                  id="outputPreference"
+                  value={outputPreference}
+                  onChange={(e) => setOutputPreference(e.target.value as OutputPreference)}
+                >
+                  {OUTPUT_PREFERENCES.map((pref) => (
+                    <option key={pref.value} value={pref.value}>
+                      {pref.label}
                     </option>
                   ))}
                 </Select>
