@@ -455,6 +455,9 @@ export async function prepareGatewayLaunchContext(port: number): Promise<Gateway
     CLAWDBOT_SKIP_CHANNELS: skipChannels ? '1' : '',
     OPENCLAW_NO_RESPAWN: '1',
     OPENCLAW_NO_BONJOUR: '1', // suppress Bonjour to avoid name conflict storms on Windows
+    // Co-locate OpenClaw state (skills, config, workspace) with the portable app's data dir.
+    // process.env.OPENCLAW_STATE_DIR is set by data-init.ts when running in portable mode.
+    OPENCLAW_STATE_DIR: process.env.OPENCLAW_STATE_DIR,
   };
 
   // Ensure extension-specific packages (e.g. grammy from the telegram
