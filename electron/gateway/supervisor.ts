@@ -8,17 +8,15 @@ import { logger } from '../utils/logger';
 import { prependPathEntry } from '../utils/env-path';
 import { probeGatewayReady } from './ws-client';
 
-export function warmupManagedPythonReadiness(): void {
-  void isPythonReady().then((pythonReady) => {
-    if (!pythonReady) {
-      logger.info('Python environment missing or incomplete, attempting background repair...');
-      void setupManagedPython().catch((err) => {
-        logger.error('Background Python repair failed:', err);
-      });
-    }
-  }).catch((err) => {
+export async function warmupManagedPythonReadiness(): Promise<void> {
+  const pythonReady = await isPythonReady().catch((err) => {
     logger.error('Failed to check Python environment:', err);
+    return false;
   });
+  if (!pythonReady) {
+    logger.info('Python environment missing or incomplete, attempting background repair...');
+    await setupManagedPython();
+  }
 }
 
 export async function terminateOwnedGatewayProcess(child: Electron.UtilityProcess): Promise<void> {

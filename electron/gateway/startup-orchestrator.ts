@@ -1,6 +1,7 @@
 import { logger } from '../utils/logger';
 import { LifecycleSupersededError } from './lifecycle-controller';
 import { getGatewayStartupRecoveryAction } from './startup-recovery';
+import { warmupManagedPythonReadiness } from './supervisor';
 
 export interface ExistingGatewayInfo {
   port: number;
@@ -74,6 +75,8 @@ export async function runGatewayStartupSequence(hooks: StartupHooks): Promise<vo
         hooks.assertLifecycle('start/wait-port');
       }
 
+      logger.debug('Pre-warming managed Python...');
+      await warmupManagedPythonReadiness();
       await hooks.startProcess();
       hooks.assertLifecycle('start/start-process');
 
