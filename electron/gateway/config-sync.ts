@@ -454,6 +454,7 @@ export async function prepareGatewayLaunchContext(port: number): Promise<Gateway
     OPENCLAW_SKIP_CHANNELS: skipChannels ? '1' : '',
     CLAWDBOT_SKIP_CHANNELS: skipChannels ? '1' : '',
     OPENCLAW_NO_RESPAWN: '1',
+    OPENCLAW_NO_BONJOUR: '1', // suppress Bonjour to avoid name conflict storms on Windows
   };
 
   // Ensure extension-specific packages (e.g. grammy from the telegram
