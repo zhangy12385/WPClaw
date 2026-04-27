@@ -9,7 +9,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select } from '@/components/ui/select';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAgentsStore } from '@/stores/agents';
 import { useChatStore } from '@/stores/chat';
 import { toast } from 'sonner';
@@ -46,7 +45,6 @@ function buildStockMessage(params: {
   const queryLabel = QUERY_TYPE_LABELS[queryType];
   const outputLabel = OUTPUT_PREFERENCES.find(p => p.value === outputPreference)?.label ?? '简洁摘要（重点风险与机会）';
 
-  // 构建标的配置参数字符串
   const parts: string[] = [`股票代码: ${stockCode}`, `查询类型: ${queryLabel}`];
 
   if (queryType === 'kline') {
@@ -57,7 +55,6 @@ function buildStockMessage(params: {
     }
   }
 
-  // 盯盘配置（始终显示，只要填了任意一个字段）
   const hasWatchConfig = watchReferencePrice || highAlertPrice || lowAlertPrice || watchNote;
   if (hasWatchConfig) {
     const watchParts: string[] = [];
@@ -87,7 +84,6 @@ export function StockDetail() {
   const [dateRange, setDateRange] = useState('');
   const [adjustType, setAdjustType] = useState('None');
   const [outputPreference, setOutputPreference] = useState<OutputPreference>('concise');
-  // 盯盘配置
   const [watchReferencePrice, setWatchReferencePrice] = useState('');
   const [highAlertPrice, setHighAlertPrice] = useState('');
   const [lowAlertPrice, setLowAlertPrice] = useState('');
@@ -142,9 +138,10 @@ export function StockDetail() {
 
       {/* Form */}
       <div className="flex-1 overflow-y-auto p-6">
-        <div className="max-w-lg space-y-4">
-          {/* 查询类型 */}
-          <Card className="bg-muted/30 p-4">
+        <div className="max-w-2xl">
+          <div className="bg-muted/30 rounded-xl p-5 space-y-4">
+
+            {/* 第一行：查询类型 */}
             <div className="space-y-2">
               <Label htmlFor="queryType">查询类型</Label>
               <Select
@@ -160,11 +157,9 @@ export function StockDetail() {
                 <option value="rzrq">融资融券</option>
               </Select>
             </div>
-          </Card>
 
-          {/* 股票代码 + 盯盘参考价 */}
-          <Card className="bg-muted/30 p-4">
-            <div className="grid grid-cols-2 gap-3">
+            {/* 第二行：左侧=股票代码+盯盘参考价 | 右侧=高于+低于提醒 */}
+            <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="stockCode">股票代码</Label>
                 <Input
@@ -183,12 +178,6 @@ export function StockDetail() {
                   onChange={(e) => setWatchReferencePrice(e.target.value)}
                 />
               </div>
-            </div>
-          </Card>
-
-          {/* 高于提醒 + 低于提醒 */}
-          <Card className="bg-muted/30 p-4">
-            <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">
                 <Label htmlFor="highAlert">高于提醒(元)</Label>
                 <Input
@@ -208,10 +197,8 @@ export function StockDetail() {
                 />
               </div>
             </div>
-          </Card>
 
-          {/* 备注 */}
-          <Card className="bg-muted/30 p-4">
+            {/* 第三行：备注 */}
             <div className="space-y-2">
               <Label htmlFor="watchNote">备注</Label>
               <Input
@@ -221,12 +208,10 @@ export function StockDetail() {
                 onChange={(e) => setWatchNote(e.target.value)}
               />
             </div>
-          </Card>
 
-          {/* K线参数 */}
-          {isKline && (
-            <Card className="bg-muted/30 p-4">
-              <div className="grid grid-cols-2 gap-3">
+            {/* K线参数 */}
+            {isKline && (
+              <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="dateRange">日期范围</Label>
                   <Input
@@ -249,18 +234,12 @@ export function StockDetail() {
                   </Select>
                 </div>
               </div>
-            </Card>
-          )}
+            )}
 
-          {/* 发送设置卡片 */}
-          <Card className="bg-muted/30">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base">发送设置</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {/* Agent下拉 */}
+            {/* 第四行：发送设置 */}
+            <div className="pt-2 space-y-3">
               <div className="space-y-2">
-                <Label htmlFor="agentSelect">Agent</Label>
+                <Label htmlFor="agentSelect">选择 Agent</Label>
                 <Select
                   id="agentSelect"
                   value={selectedAgentId}
@@ -268,14 +247,10 @@ export function StockDetail() {
                 >
                   <option value="">选择 Agent</option>
                   {agents.map((agent) => (
-                    <option key={agent.id} value={agent.id}>
-                      {agent.name}
-                    </option>
+                    <option key={agent.id} value={agent.id}>{agent.name}</option>
                   ))}
                 </Select>
               </div>
-
-              {/* 输出偏好 */}
               <div className="space-y-2">
                 <Label htmlFor="outputPreference">输出偏好</Label>
                 <Select
@@ -284,33 +259,24 @@ export function StockDetail() {
                   onChange={(e) => setOutputPreference(e.target.value as OutputPreference)}
                 >
                   {OUTPUT_PREFERENCES.map((pref) => (
-                    <option key={pref.value} value={pref.value}>
-                      {pref.label}
-                    </option>
+                    <option key={pref.value} value={pref.value}>{pref.label}</option>
                   ))}
                 </Select>
               </div>
-
-              {/* 发送按钮 */}
               <Button
                 className="w-full"
-                onClick={handleSend}
+                onClick={() => void handleSend()}
                 disabled={sending}
               >
                 {sending ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    发送中...
-                  </>
+                  <><Loader2 className="mr-2 h-4 w-4 animate-spin" />发送中...</>
                 ) : (
-                  <>
-                    <Send className="mr-2 h-4 w-4" />
-                    发送到 AI
-                  </>
+                  <><Send className="mr-2 h-4 w-4" />发送到 AI</>
                 )}
               </Button>
-            </CardContent>
-          </Card>
+            </div>
+
+          </div>
         </div>
       </div>
     </div>
