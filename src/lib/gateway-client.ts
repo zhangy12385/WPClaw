@@ -20,6 +20,7 @@ class GatewayBrowserClient {
   private gatewayInfo: GatewayInfo | null = null;
   private pendingRequests = new Map<string, PendingRequest>();
   private eventHandlers = new Map<string, Set<GatewayEventHandler>>();
+  private gatewayReady = false;
 
   async connect(): Promise<void> {
     if (this.ws?.readyState === WebSocket.OPEN) {
@@ -48,9 +49,37 @@ class GatewayBrowserClient {
       request.reject(new Error('Gateway connection closed'));
     }
     this.pendingRequests.clear();
+    this.gatewayReady = false;
+  }
+
+  waitForReady(timeoutMs = 30000): Promise<void> {
+    if (this.gatewayReady) {
+      return Promise.resolve();
+    }
+    return new Promise((resolve, reject) => {
+      const timeout = setTimeout(() => {
+        reject(new Error('Gateway ready timeout'));
+      }, timeoutMs);
+      const checkReady = () => {
+        if (this.gatewayReady) {
+          clearTimeout(timeout);
+          resolve();
+        } else {
+          setTimeout(checkReady, 50);
+        }
+      };
+      checkReady();
+    });
+  }
+
+  private setGatewayReady(): void {
+    this.gatewayReady = true;
   }
 
   async rpc<T>(method: string, params?: unknown, timeoutMs = 30000): Promise<T> {
+    if (!this.gatewayReady) {
+      await this.waitForReady();
+    }
     await this.connect();
     if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
       throw new Error('Gateway socket is not connected');
@@ -191,11 +220,17 @@ class GatewayBrowserClient {
           }
 
           if (message.type === 'event' && typeof message.event === 'string') {
+            if (message.event === 'gateway.ready') {
+              this.setGatewayReady();
+            }
             this.emitEvent(message.event, message.payload);
             return;
           }
 
           if (typeof message.method === 'string') {
+            if (message.method === 'gateway.ready') {
+              this.setGatewayReady();
+            }
             this.emitEvent(message.method, message.params);
           }
         } catch (error) {
@@ -209,6 +244,7 @@ class GatewayBrowserClient {
 
       ws.onclose = () => {
         this.ws = null;
+        this.gatewayReady = false;
         if (!resolved) {
           rejectOnce(new Error('Gateway WebSocket closed before connect'));
           return;
