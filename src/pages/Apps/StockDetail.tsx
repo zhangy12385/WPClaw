@@ -138,144 +138,141 @@ export function StockDetail() {
 
       {/* Form */}
       <div className="flex-1 overflow-y-auto p-6">
-        <div className="max-w-2xl">
-          <div className="bg-muted/30 rounded-xl p-5 space-y-4">
+        <div className="bg-muted/30 rounded-xl p-5 space-y-4">
 
-            {/* 第一行：查询类型 */}
+          {/* 第一行：查询类型 */}
+          <div className="space-y-2">
+            <Label htmlFor="queryType">查询类型</Label>
+            <Select
+              id="queryType"
+              value={queryType}
+              onChange={(e) => setQueryType(e.target.value as QueryType)}
+            >
+              <option value="realtime">实时行情</option>
+              <option value="kline">历史K线</option>
+              <option value="financial">财务数据</option>
+              <option value="fundflow">资金流向</option>
+              <option value="lhb">龙虎榜</option>
+              <option value="rzrq">融资融券</option>
+            </Select>
+          </div>
+
+          {/* 第二行：左侧=股票代码+盯盘参考价 | 右侧=高于+低于提醒 */}
+          <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="queryType">查询类型</Label>
-              <Select
-                id="queryType"
-                value={queryType}
-                onChange={(e) => setQueryType(e.target.value as QueryType)}
-              >
-                <option value="realtime">实时行情</option>
-                <option value="kline">历史K线</option>
-                <option value="financial">财务数据</option>
-                <option value="fundflow">资金流向</option>
-                <option value="lhb">龙虎榜</option>
-                <option value="rzrq">融资融券</option>
-              </Select>
-            </div>
-
-            {/* 第二行：左侧=股票代码+盯盘参考价 | 右侧=高于+低于提醒 */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="stockCode">股票代码</Label>
-                <Input
-                  id="stockCode"
-                  placeholder="如 000001、600519"
-                  value={stockCode}
-                  onChange={(e) => setStockCode(e.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="watchRef">盯盘参考价</Label>
-                <Input
-                  id="watchRef"
-                  placeholder="如 1800.00"
-                  value={watchReferencePrice}
-                  onChange={(e) => setWatchReferencePrice(e.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="highAlert">高于提醒(元)</Label>
-                <Input
-                  id="highAlert"
-                  placeholder="如 1900"
-                  value={highAlertPrice}
-                  onChange={(e) => setHighAlertPrice(e.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="lowAlert">低于提醒(元)</Label>
-                <Input
-                  id="lowAlert"
-                  placeholder="如 1700"
-                  value={lowAlertPrice}
-                  onChange={(e) => setLowAlertPrice(e.target.value)}
-                />
-              </div>
-            </div>
-
-            {/* 第三行：备注 */}
-            <div className="space-y-2">
-              <Label htmlFor="watchNote">备注</Label>
+              <Label htmlFor="stockCode">股票代码</Label>
               <Input
-                id="watchNote"
-                placeholder="如 关注财报季、重大公告等"
-                value={watchNote}
-                onChange={(e) => setWatchNote(e.target.value)}
+                id="stockCode"
+                placeholder="如 000001、600519"
+                value={stockCode}
+                onChange={(e) => setStockCode(e.target.value)}
               />
             </div>
-
-            {/* K线参数 */}
-            {isKline && (
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="dateRange">日期范围</Label>
-                  <Input
-                    id="dateRange"
-                    placeholder="如 20240101-20241231"
-                    value={dateRange}
-                    onChange={(e) => setDateRange(e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="adjustType">复权方式</Label>
-                  <Select
-                    id="adjustType"
-                    value={adjustType}
-                    onChange={(e) => setAdjustType(e.target.value)}
-                  >
-                    <option value="qfq">前复权</option>
-                    <option value="hfq">后复权</option>
-                    <option value="None">不复权</option>
-                  </Select>
-                </div>
-              </div>
-            )}
-
-            {/* 第四行：发送设置 */}
-            <div className="pt-2 space-y-3">
-              <div className="space-y-2">
-                <Label htmlFor="agentSelect">选择 Agent</Label>
-                <Select
-                  id="agentSelect"
-                  value={selectedAgentId}
-                  onChange={(e) => setSelectedAgentId(e.target.value)}
-                >
-                  <option value="">选择 Agent</option>
-                  {agents.map((agent) => (
-                    <option key={agent.id} value={agent.id}>{agent.name}</option>
-                  ))}
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="outputPreference">输出偏好</Label>
-                <Select
-                  id="outputPreference"
-                  value={outputPreference}
-                  onChange={(e) => setOutputPreference(e.target.value as OutputPreference)}
-                >
-                  {OUTPUT_PREFERENCES.map((pref) => (
-                    <option key={pref.value} value={pref.value}>{pref.label}</option>
-                  ))}
-                </Select>
-              </div>
-              <Button
-                className="w-full"
-                onClick={() => void handleSend()}
-                disabled={sending}
-              >
-                {sending ? (
-                  <><Loader2 className="mr-2 h-4 w-4 animate-spin" />发送中...</>
-                ) : (
-                  <><Send className="mr-2 h-4 w-4" />发送到 AI</>
-                )}
-              </Button>
+            <div className="space-y-2">
+              <Label htmlFor="watchRef">盯盘参考价</Label>
+              <Input
+                id="watchRef"
+                placeholder="如 1800.00"
+                value={watchReferencePrice}
+                onChange={(e) => setWatchReferencePrice(e.target.value)}
+              />
             </div>
+            <div className="space-y-2">
+              <Label htmlFor="highAlert">高于提醒(元)</Label>
+              <Input
+                id="highAlert"
+                placeholder="如 1900"
+                value={highAlertPrice}
+                onChange={(e) => setHighAlertPrice(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="lowAlert">低于提醒(元)</Label>
+              <Input
+                id="lowAlert"
+                placeholder="如 1700"
+                value={lowAlertPrice}
+                onChange={(e) => setLowAlertPrice(e.target.value)}
+              />
+            </div>
+          </div>
 
+          {/* 第三行：备注 */}
+          <div className="space-y-2">
+            <Label htmlFor="watchNote">备注</Label>
+            <Input
+              id="watchNote"
+              placeholder="如 关注财报季、重大公告等"
+              value={watchNote}
+              onChange={(e) => setWatchNote(e.target.value)}
+            />
+          </div>
+
+          {/* K线参数 */}
+          {isKline && (
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="dateRange">日期范围</Label>
+                <Input
+                  id="dateRange"
+                  placeholder="如 20240101-20241231"
+                  value={dateRange}
+                  onChange={(e) => setDateRange(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="adjustType">复权方式</Label>
+                <Select
+                  id="adjustType"
+                  value={adjustType}
+                  onChange={(e) => setAdjustType(e.target.value)}
+                >
+                  <option value="qfq">前复权</option>
+                  <option value="hfq">后复权</option>
+                  <option value="None">不复权</option>
+                </Select>
+              </div>
+            </div>
+          )}
+
+          {/* 第四行：发送设置 */}
+          <div className="pt-2 space-y-3">
+            <div className="space-y-2">
+              <Label htmlFor="agentSelect">选择 Agent</Label>
+              <Select
+                id="agentSelect"
+                value={selectedAgentId}
+                onChange={(e) => setSelectedAgentId(e.target.value)}
+              >
+                <option value="">选择 Agent</option>
+                {agents.map((agent) => (
+                  <option key={agent.id} value={agent.id}>{agent.name}</option>
+                ))}
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="outputPreference">输出偏好</Label>
+              <Select
+                id="outputPreference"
+                value={outputPreference}
+                onChange={(e) => setOutputPreference(e.target.value as OutputPreference)}
+              >
+                {OUTPUT_PREFERENCES.map((pref) => (
+                  <option key={pref.value} value={pref.value}>{pref.label}</option>
+                ))}
+              </Select>
+            </div>
+            <Button
+              className="w-full"
+              onClick={() => void handleSend()}
+              disabled={sending}
+            >
+              {sending ? (
+                <><Loader2 className="mr-2 h-4 w-4 animate-spin" />发送中...</>
+              ) : (
+                <><Send className="mr-2 h-4 w-4" />发送到 AI</>
+              )}
+            </Button>
           </div>
         </div>
       </div>

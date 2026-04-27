@@ -6,8 +6,7 @@ description: A股量化数据分析工具，基于AkShare库获取A股行情、�
 # A股量化 - AkShare 数据接口
 
 ## 快速开始
-
-安装依赖：
+检查当前环境是否安装AkShare，如果找不到就先安装依赖：
 ```bash
 pip install akshare
 ```
