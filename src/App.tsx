@@ -9,6 +9,8 @@ import { Toaster } from 'sonner';
 import i18n from './i18n';
 import { MainLayout } from './components/layout/MainLayout';
 import { TooltipProvider } from '@/components/ui/tooltip';
+import { Apps } from './pages/Apps';
+import { StockDetail } from './pages/Apps/StockDetail';
 import { Models } from './pages/Models';
 import { Chat } from './pages/Chat';
 import { Agents } from './pages/Agents';
@@ -195,6 +197,8 @@ function App() {
             <Route path="/cron" element={<Cron />} />
             <Route path="/roles" element={<Roles />} />
             <Route path="/personal-center" element={<PersonalCenter />} />
+            <Route path="/apps" element={<Apps />} />
+            <Route path="/apps/stock" element={<StockDetail />} />
             <Route path="/settings/*" element={<Settings />} />
             {extraRoutes.map((r) => (
               <Route key={r.path} path={r.path} element={<r.component />} />
