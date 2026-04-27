@@ -142,18 +142,7 @@ export function StockDetail() {
 
       {/* Form */}
       <div className="flex-1 overflow-y-auto p-6">
-        <div className="max-w-lg space-y-6">
-          {/* 股票代码 */}
-          <div className="space-y-2">
-            <Label htmlFor="stockCode">股票代码</Label>
-            <Input
-              id="stockCode"
-              placeholder="如 000001、600519"
-              value={stockCode}
-              onChange={(e) => setStockCode(e.target.value)}
-            />
-          </div>
-
+        <div className="max-w-lg space-y-5">
           {/* 查询类型 */}
           <div className="space-y-2">
             <Label htmlFor="queryType">查询类型</Label>
@@ -171,46 +160,29 @@ export function StockDetail() {
             </Select>
           </div>
 
-          {/* 日期范围 - 仅 kline 时显示 */}
-          {isKline && (
+          {/* 股票代码 + 盯盘参考价 */}
+          <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
-              <Label htmlFor="dateRange">日期范围</Label>
+              <Label htmlFor="stockCode">股票代码</Label>
               <Input
-                id="dateRange"
-                placeholder="如 20240101-20241231"
-                value={dateRange}
-                onChange={(e) => setDateRange(e.target.value)}
+                id="stockCode"
+                placeholder="如 000001、600519"
+                value={stockCode}
+                onChange={(e) => setStockCode(e.target.value)}
               />
             </div>
-          )}
-
-          {/* 复权方式 - 仅 kline 时显示 */}
-          {isKline && (
             <div className="space-y-2">
-              <Label htmlFor="adjustType">复权方式</Label>
-              <Select
-                id="adjustType"
-                value={adjustType}
-                onChange={(e) => setAdjustType(e.target.value)}
-              >
-                <option value="qfq">前复权</option>
-                <option value="hfq">后复权</option>
-                <option value="None">不复权</option>
-              </Select>
+              <Label htmlFor="watchRef">盯盘参考价</Label>
+              <Input
+                id="watchRef"
+                placeholder="如 1800.00"
+                value={watchReferencePrice}
+                onChange={(e) => setWatchReferencePrice(e.target.value)}
+              />
             </div>
-          )}
-
-          {/* 盯盘配置 */}
-          <div className="space-y-2">
-            <Label htmlFor="watchRef">盯盘参考价</Label>
-            <Input
-              id="watchRef"
-              placeholder="如 1800.00"
-              value={watchReferencePrice}
-              onChange={(e) => setWatchReferencePrice(e.target.value)}
-            />
           </div>
 
+          {/* 高于提醒 + 低于提醒 */}
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
               <Label htmlFor="highAlert">高于提醒(元)</Label>
@@ -241,6 +213,35 @@ export function StockDetail() {
               onChange={(e) => setWatchNote(e.target.value)}
             />
           </div>
+
+          {/* K线参数 */}
+          {isKline && (
+            <>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-2">
+                  <Label htmlFor="dateRange">日期范围</Label>
+                  <Input
+                    id="dateRange"
+                    placeholder="如 20240101-20241231"
+                    value={dateRange}
+                    onChange={(e) => setDateRange(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="adjustType">复权方式</Label>
+                  <Select
+                    id="adjustType"
+                    value={adjustType}
+                    onChange={(e) => setAdjustType(e.target.value)}
+                  >
+                    <option value="qfq">前复权</option>
+                    <option value="hfq">后复权</option>
+                    <option value="None">不复权</option>
+                  </Select>
+                </div>
+              </div>
+            </>
+          )}
 
           {/* Agent选择卡片 */}
           <Card className="bg-muted/30">
