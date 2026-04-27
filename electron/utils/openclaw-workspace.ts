@@ -258,26 +258,15 @@ async function mergeClawXContextOnce(): Promise<number> {
   return skipped;
 }
 
-const RETRY_INTERVAL_MS = 3000;
-const MAX_RETRIES = 30;
-
 /**
  * Ensure ClawX context snippets are merged into the openclaw workspace
  * bootstrap files.
  */
 export async function ensureClawXContext(): Promise<void> {
-  let skipped = await mergeClawXContextOnce();
-  if (skipped === 0) return;
-
-  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
-    await new Promise((r) => setTimeout(r, RETRY_INTERVAL_MS));
-    skipped = await mergeClawXContextOnce();
-    if (skipped === 0) {
-      logger.info(`ClawX context merge completed after ${attempt} retry(ies)`);
-      return;
-    }
-    logger.debug(`ClawX context merge: ${skipped} file(s) still missing (retry ${attempt}/${MAX_RETRIES})`);
+  const skipped = await mergeClawXContextOnce();
+  if (skipped > 0) {
+    logger.warn(`ClawX context merge: ${skipped} file(s) missing (Gateway may not have seeded them yet)`);
+  } else {
+    logger.info('ClawX context merge completed');
   }
-
-  logger.warn(`ClawX context merge: ${skipped} file(s) still missing after ${MAX_RETRIES} retries`);
 }

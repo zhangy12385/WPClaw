@@ -498,15 +498,6 @@ async function initialize(): Promise<void> {
     logger.info('Gateway auto-start disabled in settings');
   }
 
-  // Merge ClawX context snippets into the workspace bootstrap files.
-  // The gateway seeds workspace files asynchronously after its HTTP server
-  // is ready, so ensureClawXContext will retry until the target files appear.
-  if (!isE2EMode) {
-    void ensureClawXContext().catch((error) => {
-      logger.warn('Failed to merge ClawX context into workspace:', error);
-    });
-  }
-
   // Auto-install openclaw CLI and shell completions (non-blocking).
   if (!isE2EMode) {
     void autoInstallCliIfNeeded((installedPath) => {
