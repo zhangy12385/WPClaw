@@ -37,12 +37,16 @@ function buildStockMessage(params: {
   dateRange?: string;
   adjustType?: string;
   outputPreference: OutputPreference;
+  watchReferencePrice?: string;
+  highAlertPrice?: string;
+  lowAlertPrice?: string;
+  watchNote?: string;
 }): string {
-  const { stockCode, queryType, dateRange, adjustType, outputPreference } = params;
+  const { stockCode, queryType, dateRange, adjustType, outputPreference, watchReferencePrice, highAlertPrice, lowAlertPrice, watchNote } = params;
   const queryLabel = QUERY_TYPE_LABELS[queryType];
   const outputLabel = OUTPUT_PREFERENCES.find(p => p.value === outputPreference)?.label ?? '简洁摘要（重点风险与机会）';
 
-  // 构建参数字符串
+  // 构建标的配置参数字符串
   const parts: string[] = [`股票代码: ${stockCode}`, `查询类型: ${queryLabel}`];
 
   if (queryType === 'kline') {
@@ -51,6 +55,17 @@ function buildStockMessage(params: {
     if (adjustType && adjustType !== 'None') {
       parts.push(`复权方式: ${adjustType === 'qfq' ? '前复权' : '后复权'}`);
     }
+  }
+
+  // 盯盘配置（始终显示，只要填了任意一个字段）
+  const hasWatchConfig = watchReferencePrice || highAlertPrice || lowAlertPrice || watchNote;
+  if (hasWatchConfig) {
+    const watchParts: string[] = [];
+    if (watchReferencePrice) watchParts.push(`盯盘参考价: ${watchReferencePrice}`);
+    if (highAlertPrice) watchParts.push(`高于提醒参考价(元): ${highAlertPrice}`);
+    if (lowAlertPrice) watchParts.push(`低于提醒参考价(元): ${lowAlertPrice}`);
+    if (watchNote) watchParts.push(`备注: ${watchNote}`);
+    parts.push(...watchParts);
   }
 
   const paramsStr = parts.join(' | ');
@@ -72,6 +87,11 @@ export function StockDetail() {
   const [dateRange, setDateRange] = useState('');
   const [adjustType, setAdjustType] = useState('None');
   const [outputPreference, setOutputPreference] = useState<OutputPreference>('concise');
+  // 盯盘配置
+  const [watchReferencePrice, setWatchReferencePrice] = useState('');
+  const [highAlertPrice, setHighAlertPrice] = useState('');
+  const [lowAlertPrice, setLowAlertPrice] = useState('');
+  const [watchNote, setWatchNote] = useState('');
   const [selectedAgentId, setSelectedAgentId] = useState<string>('');
   const [sending, setSending] = useState(false);
 
@@ -95,6 +115,10 @@ export function StockDetail() {
         dateRange: isKline ? dateRange : undefined,
         adjustType: isKline ? adjustType : undefined,
         outputPreference,
+        watchReferencePrice: watchReferencePrice.trim() || undefined,
+        highAlertPrice: highAlertPrice.trim() || undefined,
+        lowAlertPrice: lowAlertPrice.trim() || undefined,
+        watchNote: watchNote.trim() || undefined,
       });
       await useChatStore.getState().sendMessage(message, undefined, selectedAgentId);
       navigate('/');
@@ -175,6 +199,48 @@ export function StockDetail() {
               </Select>
             </div>
           )}
+
+          {/* 盯盘配置 */}
+          <div className="space-y-2">
+            <Label htmlFor="watchRef">盯盘参考价</Label>
+            <Input
+              id="watchRef"
+              placeholder="如 1800.00"
+              value={watchReferencePrice}
+              onChange={(e) => setWatchReferencePrice(e.target.value)}
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-2">
+              <Label htmlFor="highAlert">高于提醒(元)</Label>
+              <Input
+                id="highAlert"
+                placeholder="如 1900"
+                value={highAlertPrice}
+                onChange={(e) => setHighAlertPrice(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="lowAlert">低于提醒(元)</Label>
+              <Input
+                id="lowAlert"
+                placeholder="如 1700"
+                value={lowAlertPrice}
+                onChange={(e) => setLowAlertPrice(e.target.value)}
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="watchNote">备注</Label>
+            <Input
+              id="watchNote"
+              placeholder="如 关注财报季、重大公告等"
+              value={watchNote}
+              onChange={(e) => setWatchNote(e.target.value)}
+            />
+          </div>
 
           {/* Agent选择卡片 */}
           <Card className="bg-muted/30">
