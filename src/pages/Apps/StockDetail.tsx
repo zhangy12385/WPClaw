@@ -46,7 +46,6 @@ function buildStockMessage(params: {
   const queryLabel = QUERY_TYPE_LABELS[queryType];
   const outputLabel = OUTPUT_PREFERENCES.find(p => p.value === outputPreference)?.label ?? '简洁摘要（重点风险与机会）';
 
-  // 构建标的配置参数字符串
   const parts: string[] = [`股票代码: ${stockCode}`, `查询类型: ${queryLabel}`];
 
   if (queryType === 'kline') {
@@ -57,7 +56,6 @@ function buildStockMessage(params: {
     }
   }
 
-  // 盯盘配置（始终显示，只要填了任意一个字段）
   const hasWatchConfig = watchReferencePrice || highAlertPrice || lowAlertPrice || watchNote;
   if (hasWatchConfig) {
     const watchParts: string[] = [];
@@ -87,7 +85,6 @@ export function StockDetail() {
   const [dateRange, setDateRange] = useState('');
   const [adjustType, setAdjustType] = useState('None');
   const [outputPreference, setOutputPreference] = useState<OutputPreference>('concise');
-  // 盯盘配置
   const [watchReferencePrice, setWatchReferencePrice] = useState('');
   const [highAlertPrice, setHighAlertPrice] = useState('');
   const [lowAlertPrice, setLowAlertPrice] = useState('');
@@ -150,6 +147,7 @@ export function StockDetail() {
               id="queryType"
               value={queryType}
               onChange={(e) => setQueryType(e.target.value as QueryType)}
+              className="bg-white dark:bg-black border-gray-300 dark:border-gray-600"
             >
               <option value="realtime">实时行情</option>
               <option value="kline">历史K线</option>
@@ -169,6 +167,7 @@ export function StockDetail() {
                 placeholder="如 000001、600519"
                 value={stockCode}
                 onChange={(e) => setStockCode(e.target.value)}
+                className="bg-white dark:bg-black border-gray-300 dark:border-gray-600"
               />
             </div>
             <div className="space-y-2">
@@ -178,6 +177,7 @@ export function StockDetail() {
                 placeholder="如 1800.00"
                 value={watchReferencePrice}
                 onChange={(e) => setWatchReferencePrice(e.target.value)}
+                className="bg-white dark:bg-black border-gray-300 dark:border-gray-600"
               />
             </div>
           </div>
@@ -191,6 +191,7 @@ export function StockDetail() {
                 placeholder="如 1900"
                 value={highAlertPrice}
                 onChange={(e) => setHighAlertPrice(e.target.value)}
+                className="bg-white dark:bg-black border-gray-300 dark:border-gray-600"
               />
             </div>
             <div className="space-y-2">
@@ -200,47 +201,67 @@ export function StockDetail() {
                 placeholder="如 1700"
                 value={lowAlertPrice}
                 onChange={(e) => setLowAlertPrice(e.target.value)}
+                className="bg-white dark:bg-black border-gray-300 dark:border-gray-600"
               />
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="watchNote">备注</Label>
-            <Input
-              id="watchNote"
-              placeholder="如 关注财报季、重大公告等"
-              value={watchNote}
-              onChange={(e) => setWatchNote(e.target.value)}
-            />
+          {/* 备注 + 输出偏好 */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-2">
+              <Label htmlFor="watchNote">备注</Label>
+              <Input
+                id="watchNote"
+                placeholder="如 关注财报季"
+                value={watchNote}
+                onChange={(e) => setWatchNote(e.target.value)}
+                className="bg-white dark:bg-black border-gray-300 dark:border-gray-600"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="outputPreference">输出偏好</Label>
+              <Select
+                id="outputPreference"
+                value={outputPreference}
+                onChange={(e) => setOutputPreference(e.target.value as OutputPreference)}
+                className="bg-white dark:bg-black border-gray-300 dark:border-gray-600"
+              >
+                {OUTPUT_PREFERENCES.map((pref) => (
+                  <option key={pref.value} value={pref.value}>
+                    {pref.label}
+                  </option>
+                ))}
+              </Select>
+            </div>
           </div>
 
-          {/* K线参数 */}
+          {/* K线参数 - 仅K线时显示 */}
           {isKline && (
-            <>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-2">
-                  <Label htmlFor="dateRange">日期范围</Label>
-                  <Input
-                    id="dateRange"
-                    placeholder="如 20240101-20241231"
-                    value={dateRange}
-                    onChange={(e) => setDateRange(e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="adjustType">复权方式</Label>
-                  <Select
-                    id="adjustType"
-                    value={adjustType}
-                    onChange={(e) => setAdjustType(e.target.value)}
-                  >
-                    <option value="qfq">前复权</option>
-                    <option value="hfq">后复权</option>
-                    <option value="None">不复权</option>
-                  </Select>
-                </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label htmlFor="dateRange">日期范围</Label>
+                <Input
+                  id="dateRange"
+                  placeholder="如 20240101-20241231"
+                  value={dateRange}
+                  onChange={(e) => setDateRange(e.target.value)}
+                  className="bg-white dark:bg-black border-gray-300 dark:border-gray-600"
+                />
               </div>
-            </>
+              <div className="space-y-2">
+                <Label htmlFor="adjustType">复权方式</Label>
+                <Select
+                  id="adjustType"
+                  value={adjustType}
+                  onChange={(e) => setAdjustType(e.target.value)}
+                  className="bg-white dark:bg-black border-gray-300 dark:border-gray-600"
+                >
+                  <option value="qfq">前复权</option>
+                  <option value="hfq">后复权</option>
+                  <option value="None">不复权</option>
+                </Select>
+              </div>
+            </div>
           )}
 
           {/* Agent选择卡片 */}
@@ -249,13 +270,13 @@ export function StockDetail() {
               <CardTitle className="text-base">发送设置</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {/* Agent下拉 */}
               <div className="space-y-2">
                 <Label htmlFor="agentSelect">Agent</Label>
                 <Select
                   id="agentSelect"
                   value={selectedAgentId}
                   onChange={(e) => setSelectedAgentId(e.target.value)}
+                  className="bg-white dark:bg-black border-gray-300 dark:border-gray-600"
                 >
                   <option value="">选择 Agent</option>
                   {agents.map((agent) => (
@@ -265,27 +286,9 @@ export function StockDetail() {
                   ))}
                 </Select>
               </div>
-
-              {/* 输出偏好 */}
-              <div className="space-y-2">
-                <Label htmlFor="outputPreference">输出偏好</Label>
-                <Select
-                  id="outputPreference"
-                  value={outputPreference}
-                  onChange={(e) => setOutputPreference(e.target.value as OutputPreference)}
-                >
-                  {OUTPUT_PREFERENCES.map((pref) => (
-                    <option key={pref.value} value={pref.value}>
-                      {pref.label}
-                    </option>
-                  ))}
-                </Select>
-              </div>
-
-              {/* 发送按钮 */}
               <Button
                 className="w-full"
-                onClick={handleSend}
+                onClick={() => void handleSend()}
                 disabled={sending}
               >
                 {sending ? (
