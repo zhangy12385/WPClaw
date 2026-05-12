@@ -1,12 +1,11 @@
 /**
  * Football Analysis App
- * 足球分析 - Query football/soccer data via AI
+ * 足球分析 - AI powered soccer lottery analysis via soccer-lottery skill
  */
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Send, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select } from '@/components/ui/select';
 import { useAgentsStore } from '@/stores/agents';
@@ -14,56 +13,35 @@ import { useChatStore } from '@/stores/chat';
 import { useSkillsStore } from '@/stores/skills';
 import { toast } from 'sonner';
 
-type SearchRange = '3days' | '7days' | '14days';
-type DataType = 'all' | 'basic' | 'odds' | 'prediction';
-type PlayType = 'winDrawLose' | 'handicap' | 'goals';
+type LeagueRange = 'all' | 'top5' | 'custom';
 
-const SEARCH_RANGE_LABELS: Record<SearchRange, string> = {
-  '3days': '近3天',
-  '7days': '近7天',
-  '14days': '近14天',
+const LEAGUE_RANGE_LABELS: Record<LeagueRange, string> = {
+  all: '全量（包含亚洲联赛）',
+  top5: '五大联赛 + 欧冠',
+  custom: '自选联赛',
 };
 
-const DATA_TYPE_LABELS: Record<DataType, string> = {
-  all: '全部',
-  basic: '基本信息',
-  odds: '赔率',
-  prediction: '预测',
-};
-
-const PLAY_TYPE_LABELS: Record<PlayType, string> = {
-  winDrawLose: '胜平负',
-  handicap: '让球',
-  goals: '进球',
-};
+const CONFIDENCE_DEFAULT = 70;
 
 function buildFootballMessage(params: {
-  teamLeagueName: string;
-  searchRange: SearchRange;
-  dataType: DataType;
-  playType?: PlayType;
+  leagueRange: LeagueRange;
+  confidenceThreshold: number;
   skillBaseDir?: string;
 }): string {
-  const { teamLeagueName, searchRange, dataType, playType, skillBaseDir } = params;
-  const rangeLabel = SEARCH_RANGE_LABELS[searchRange];
-  const dataTypeLabel = DATA_TYPE_LABELS[dataType];
-
-  const parts: string[] = [`球队/联赛名称: ${teamLeagueName}`, `搜索范围: ${rangeLabel}`, `数据类型: ${dataTypeLabel}`];
-
-  if (playType) {
-    parts.push(`预测玩法: ${PLAY_TYPE_LABELS[playType]}`);
-  }
-
-  const paramsStr = parts.join(' | ');
+  const { leagueRange, confidenceThreshold, skillBaseDir } = params;
+  const leagueRangeLabel = LEAGUE_RANGE_LABELS[leagueRange];
 
   const skillRef = skillBaseDir
-    ? `请调用「qiuban-fetch」技能（路径：${skillBaseDir}）获取足球数据`
-    : `请调用「qiuban-fetch」技能获取足球数据`;
+    ? `请调用「soccer-lottery」技能（路径：${skillBaseDir}）执行今日全自动分析`
+    : `请调用「soccer-lottery」技能执行今日全自动分析`;
 
   return (
-    `【足球分析工具】${skillRef}。\n\n` +
-    `标的配置：\n${paramsStr}\n\n` +
-    `请结合数据汇总近期表现，并给出分析建议。`
+    `【足彩分析】${skillRef}。\n\n` +
+    `配置参数：\n` +
+    `- 联赛范围：${leagueRangeLabel}\n` +
+    `- 信心阈值：${confidenceThreshold}%\n` +
+    `- 过关组合：仅 2串1（稳健型）\n\n` +
+    `请执行完整分析流程并输出报告。`
   );
 }
 
@@ -73,10 +51,8 @@ export function FootballDetail() {
   const skills = useSkillsStore((state) => state.skills);
   const fetchSkills = useSkillsStore((state) => state.fetchSkills);
 
-  const [teamLeagueName, setTeamLeagueName] = useState('');
-  const [searchRange, setSearchRange] = useState<SearchRange>('7days');
-  const [dataType, setDataType] = useState<DataType>('all');
-  const [playType, setPlayType] = useState<PlayType | ''>('');
+  const [leagueRange, setLeagueRange] = useState<LeagueRange>('all');
+  const [confidenceThreshold, setConfidenceThreshold] = useState(CONFIDENCE_DEFAULT);
   const [selectedAgentId, setSelectedAgentId] = useState('');
   const [sending, setSending] = useState(false);
 
@@ -85,14 +61,10 @@ export function FootballDetail() {
     void fetchSkills();
   }, [fetchSkills]);
 
-  const qiubanSkill = skills.find((s) => s.slug === 'qiuban-fetch' || s.id === 'qiuban-fetch');
-  const skillBaseDir = qiubanSkill?.baseDir;
+  const soccerLotterySkill = skills.find((s) => s.slug === 'soccer-lottery' || s.id === 'soccer-lottery');
+  const skillBaseDir = soccerLotterySkill?.baseDir;
 
   const handleSend = async () => {
-    if (!teamLeagueName.trim()) {
-      toast.error('请填写球队/联赛名称');
-      return;
-    }
     if (!selectedAgentId) {
       toast.error('请选择 Agent');
       return;
@@ -101,10 +73,8 @@ export function FootballDetail() {
     setSending(true);
     try {
       const message = buildFootballMessage({
-        teamLeagueName: teamLeagueName.trim(),
-        searchRange,
-        dataType,
-        playType: playType || undefined,
+        leagueRange,
+        confidenceThreshold,
         skillBaseDir,
       });
       await useChatStore.getState().sendMessage(message, undefined, selectedAgentId);
@@ -123,96 +93,79 @@ export function FootballDetail() {
         </Button>
         <div>
           <h1 className="text-xl font-bold tracking-tight">足球分析</h1>
-          <p className="text-sm text-muted-foreground">填写参数，AI将查询并分析数据</p>
+          <p className="text-sm text-muted-foreground">AI 全自动分析今日赛事，输出足彩推荐报告</p>
         </div>
       </div>
 
       {/* Form */}
       <div className="flex-1 overflow-y-auto p-6">
-        <div className="bg-muted/30 rounded-xl p-5 space-y-4">
+        <div className="bg-muted/30 rounded-xl p-5 space-y-6">
 
-          {/* 第一行：球队/联赛名称 */}
+          {/* 联赛范围 */}
           <div className="space-y-2">
-            <Label htmlFor="teamLeagueName">球队/联赛名称</Label>
-            <Input
-              id="teamLeagueName"
-              placeholder="如 曼城、英超、皇家马德里"
-              value={teamLeagueName}
-              onChange={(e) => setTeamLeagueName(e.target.value)}
-            />
-          </div>
-
-          {/* 第二行：搜索范围 + 数据类型 */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="searchRange">搜索范围</Label>
-              <Select
-                id="searchRange"
-                value={searchRange}
-                onChange={(e) => setSearchRange(e.target.value as SearchRange)}
-              >
-                <option value="3days">近3天</option>
-                <option value="7days">近7天</option>
-                <option value="14days">近14天</option>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="dataType">数据类型</Label>
-              <Select
-                id="dataType"
-                value={dataType}
-                onChange={(e) => setDataType(e.target.value as DataType)}
-              >
-                <option value="all">全部</option>
-                <option value="basic">基本信息</option>
-                <option value="odds">赔率</option>
-                <option value="prediction">预测</option>
-              </Select>
-            </div>
-          </div>
-
-          {/* 第三行：预测玩法 */}
-          <div className="space-y-2">
-            <Label htmlFor="playType">预测玩法（可选）</Label>
+            <Label htmlFor="leagueRange">联赛范围</Label>
             <Select
-              id="playType"
-              value={playType}
-              onChange={(e) => setPlayType(e.target.value as PlayType || '')}
+              id="leagueRange"
+              value={leagueRange}
+              onChange={(e) => setLeagueRange(e.target.value as LeagueRange)}
             >
-              <option value="">不限</option>
-              <option value="winDrawLose">胜平负</option>
-              <option value="handicap">让球</option>
-              <option value="goals">进球</option>
+              <option value="all">全量（包含亚洲联赛）</option>
+              <option value="top5">五大联赛 + 欧冠</option>
+              <option value="custom">自选联赛</option>
             </Select>
           </div>
 
-          {/* 第四行：发送设置 */}
-          <div className="pt-2 space-y-3">
-            <div className="space-y-2">
-              <Label htmlFor="agentSelect">选择 Agent</Label>
-              <Select
-                id="agentSelect"
-                value={selectedAgentId}
-                onChange={(e) => setSelectedAgentId(e.target.value)}
-              >
-                <option value="">选择 Agent</option>
-                {agents.map((agent) => (
-                  <option key={agent.id} value={agent.id}>{agent.name}</option>
-                ))}
-              </Select>
-            </div>
-            <Button
-              className="w-full"
-              onClick={() => void handleSend()}
-              disabled={sending}
+          {/* 信心阈值 */}
+          <div className="space-y-2">
+            <Label htmlFor="confidence">
+              信心阈值 <span className="text-muted-foreground text-sm">（低于此值不显示推荐）</span>
+            </Label>
+            <Select
+              id="confidence"
+              value={String(confidenceThreshold)}
+              onChange={(e) => setConfidenceThreshold(Number(e.target.value))}
             >
-              {sending ? (
-                <><Loader2 className="mr-2 h-4 w-4 animate-spin" />发送中...</>
-              ) : (
-                <><Send className="mr-2 h-4 w-4" />发送到 AI</>
-              )}
-            </Button>
+              <option value="60">60%</option>
+              <option value="65">65%</option>
+              <option value="70">70%</option>
+              <option value="75">75%</option>
+              <option value="80">80%</option>
+              <option value="85">85%</option>
+            </Select>
           </div>
+
+          {/* Agent 选择 */}
+          <div className="space-y-2">
+            <Label htmlFor="agentSelect">选择 Agent</Label>
+            <Select
+              id="agentSelect"
+              value={selectedAgentId}
+              onChange={(e) => setSelectedAgentId(e.target.value)}
+            >
+              <option value="">选择 Agent</option>
+              {agents.map((agent) => (
+                <option key={agent.id} value={agent.id}>{agent.name}</option>
+              ))}
+            </Select>
+          </div>
+
+          {/* 发送按钮 */}
+          <Button
+            className="w-full"
+            onClick={() => void handleSend()}
+            disabled={sending}
+          >
+            {sending ? (
+              <><Loader2 className="mr-2 h-4 w-4 animate-spin" />分析中...</>
+            ) : (
+              <><Send className="mr-2 h-4 w-4" />开始分析</>
+            )}
+          </Button>
+
+          {/* 提示信息 */}
+          <p className="text-xs text-muted-foreground text-center">
+            AI 将自动抓取今日赛事数据，进行多维分析后输出推荐报告
+          </p>
         </div>
       </div>
     </div>
