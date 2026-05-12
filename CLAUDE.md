@@ -9,14 +9,18 @@ ClawX is a cross-platform Electron desktop app (React 19 + Vite + TypeScript) pr
 ## Key Commands
 
 ```bash
-pnpm run init          # Install deps + download uv
-pnpm dev               # Start with hot reload
+pnpm run init          # Install deps + download uv (two-in-one setup)
+pnpm dev               # Start with hot reload (auto-prepares bundled skills if missing)
 pnpm run lint          # ESLint with auto-fix
 pnpm run typecheck     # TypeScript validation
 pnpm test              # Unit tests (Vitest)
-pnpm run test:e2e      # Playwright Electron E2E tests
+pnpm run test:e2e      # Playwright Electron E2E tests (builds renderer/electron bundles, runs in isolated temp HOME/userData, skips gateway auto-start and tray)
+pnpm run test:e2e:headed # Same with visible window
 pnpm run build:vite    # Build frontend only
 pnpm build             # Full production build
+pnpm run comms:replay  # Compute communication replay metrics
+pnpm run comms:baseline # Refresh communication baseline snapshot
+pnpm run comms:compare  # Compare replay metrics against baseline thresholds
 ```
 
 Run a single test file: `pnpm test -- <path>`
@@ -84,3 +88,4 @@ Run a single test file: `pnpm test -- <path>`
 - **Doc sync rule**: After functional/architecture changes, update `README.md`, `README.zh-CN.md`, and `README.ja-JP.md` in the same PR.
 - **UI change validation**: Any user-visible UI change should include/update an E2E spec in the same PR.
 - **Comms changes**: If touching communication paths (gateway events, runtime send/receive, delivery, fallback), run `comms:replay` and `comms:compare` before pushing.
+- **Process model**: ClawX is an Electron app, so one app instance appears as multiple OS processes (main/renderer/zygote/utility). This is expected. Single-instance protection uses Electron's lock plus a local process-file lock fallback. The OpenClaw Gateway listener should be single-owner (only one process on `127.0.0.1:18789`); verify with `lsof -nP -iTCP:18789 -sTCP:LISTEN` (macOS/Linux) or `Get-NetTCPConnection -LocalPort 18789 -State Listen` (Windows). Clicking the window close button hides to tray; use tray menu "Quit ClawX" for complete shutdown.

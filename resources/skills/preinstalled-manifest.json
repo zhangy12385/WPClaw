@@ -9,6 +9,14 @@
       "autoEnable": true
     },
     {
+      "slug": "qiuban-fetch",
+      "repo": "local",
+      "repoPath": "qiuban-fetch",
+      "ref": "local",
+      "version": "local",
+      "autoEnable": true
+    },
+    {
       "slug": "pdf",
       "repo": "anthropics/skills",
       "repoPath": "skills/pdf",

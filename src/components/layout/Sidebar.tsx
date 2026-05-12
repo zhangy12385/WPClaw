@@ -50,21 +50,30 @@ interface NavItemProps {
   collapsed?: boolean;
   onClick?: () => void;
   testId?: string;
+  disabled?: boolean;
 }
 
-function NavItem({ to, icon, label, badge, collapsed, onClick, testId }: NavItemProps) {
+function NavItem({ to, icon, label, badge, collapsed, onClick, testId, disabled }: NavItemProps) {
+  const handleClick = (e: React.MouseEvent) => {
+    if (disabled) {
+      e.preventDefault();
+      return;
+    }
+    onClick?.();
+  };
   return (
     <NavLink
-      to={to}
-      onClick={onClick}
+      to={disabled ? '#' : to}
+      onClick={handleClick}
       data-testid={testId}
       className={({ isActive }) =>
         cn(
           'flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-[14px] font-medium transition-colors',
           'hover:bg-black/5 dark:hover:bg-white/5 text-foreground/80',
-          isActive
+          isActive && !disabled
             ? 'bg-black/5 dark:bg-white/10 text-foreground'
             : '',
+          disabled && 'opacity-40 cursor-not-allowed pointer-events-none',
           collapsed && 'justify-center px-0'
         )
       }
@@ -218,12 +227,12 @@ export function Sidebar() {
   const extraNavItems = rendererExtensionRegistry.getExtraNavItems();
 
   const coreNavItems = [
-    { to: '/agents', icon: <Bot className="h-[18px] w-[18px]" strokeWidth={2} />, label: t('sidebar.agents'), testId: 'sidebar-nav-agents' },
+    { to: '/agents', icon: <Bot className="h-[18px] w-[18px]" strokeWidth={2} />, label: t('sidebar.agents'), testId: 'sidebar-nav-agents', disabled: !isGatewayReady },
     { to: '/channels', icon: <Network className="h-[18px] w-[18px]" strokeWidth={2} />, label: t('sidebar.channels'), testId: 'sidebar-nav-channels' },
     { to: '/skills', icon: <Puzzle className="h-[18px] w-[18px]" strokeWidth={2} />, label: t('sidebar.skills'), testId: 'sidebar-nav-skills' },
     { to: '/cron', icon: <Clock className="h-[18px] w-[18px]" strokeWidth={2} />, label: t('sidebar.cronTasks'), testId: 'sidebar-nav-cron' },
-    { to: '/roles', icon: <UserCircle className="h-[18px] w-[18px]" strokeWidth={2} />, label: t('sidebar.roles'), testId: 'sidebar-nav-roles' },
-    { to: '/apps', icon: <Grid className="h-[18px] w-[18px]" strokeWidth={2} />, label: t('sidebar.apps'), testId: 'sidebar-nav-apps' },
+    { to: '/roles', icon: <UserCircle className="h-[18px] w-[18px]" strokeWidth={2} />, label: t('sidebar.roles'), testId: 'sidebar-nav-roles', disabled: !isGatewayReady },
+    { to: '/apps', icon: <Grid className="h-[18px] w-[18px]" strokeWidth={2} />, label: t('sidebar.apps'), testId: 'sidebar-nav-apps', disabled: !isGatewayReady },
   ];
 
   const navItems = [

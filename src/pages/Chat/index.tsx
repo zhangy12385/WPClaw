@@ -59,6 +59,7 @@ export function Chat() {
   const { t } = useTranslation('chat');
   const gatewayStatus = useGatewayStore((s) => s.status);
   const isGatewayRunning = gatewayStatus.state === 'running';
+  const isGatewayReady = isGatewayRunning && gatewayStatus.gatewayReady !== false;
 
   const messages = useChatStore((s) => s.messages);
   const currentSessionKey = useChatStore((s) => s.currentSessionKey);
@@ -646,7 +647,7 @@ export function Chat() {
       <ChatInput
         onSend={sendMessage}
         onStop={abortRun}
-        disabled={!isGatewayRunning}
+        disabled={!isGatewayReady}
         sending={sending || hasActiveExecutionGraph}
         isEmpty={isEmpty}
       />

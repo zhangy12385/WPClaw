@@ -59,17 +59,15 @@ const apps = [
     title: '足球分析',
     description: '足球赛事数据查询与分析',
     icon: <Footprints className="h-6 w-6" />,
-    comingSoon: true,
+    comingSoon: false,
   },
 ];
 
 export function Apps() {
   const navigate = useNavigate();
 
-  const handleAppClick = (appId: string, comingSoon: boolean) => {
-    if (!comingSoon) {
-      navigate(`/apps/${appId}`);
-    }
+  const handleAppClick = (appId: string) => {
+    navigate(`/apps/${appId}`);
   };
 
   return (
@@ -87,7 +85,7 @@ export function Apps() {
               description={app.description}
               icon={app.icon}
               comingSoon={app.comingSoon}
-              onClick={() => handleAppClick(app.id, app.comingSoon)}
+              onClick={() => handleAppClick(app.id)}
             />
           ))}
         </div>

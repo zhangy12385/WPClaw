@@ -161,11 +161,6 @@ export function Setup() {
     setCurrentStep((i) => Math.max(i - 1, 0));
   };
 
-  const handleSkip = () => {
-    markSetupComplete();
-    navigate('/');
-  };
-
   // Auto-proceed when installation is complete
   const handleInstallationComplete = useCallback((skills: string[]) => {
     setInstalledSkills(skills);

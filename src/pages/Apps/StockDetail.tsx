@@ -2,7 +2,7 @@
  * Stock Detail Page
  * A股量化 - Query stock data via AI
  */
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Send, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Select } from '@/components/ui/select';
 import { useAgentsStore } from '@/stores/agents';
 import { useChatStore } from '@/stores/chat';
+import { useSkillsStore } from '@/stores/skills';
 import { toast } from 'sonner';
 
 type QueryType = 'realtime' | 'kline' | 'financial' | 'fundflow' | 'lhb' | 'rzrq';
@@ -40,8 +41,9 @@ function buildStockMessage(params: {
   highAlertPrice?: string;
   lowAlertPrice?: string;
   watchNote?: string;
+  skillBaseDir?: string;
 }): string {
-  const { stockCode, queryType, dateRange, adjustType, outputPreference, watchReferencePrice, highAlertPrice, lowAlertPrice, watchNote } = params;
+  const { stockCode, queryType, dateRange, adjustType, outputPreference, watchReferencePrice, highAlertPrice, lowAlertPrice, watchNote, skillBaseDir } = params;
   const queryLabel = QUERY_TYPE_LABELS[queryType];
   const outputLabel = OUTPUT_PREFERENCES.find(p => p.value === outputPreference)?.label ?? '简洁摘要（重点风险与机会）';
 
@@ -67,8 +69,12 @@ function buildStockMessage(params: {
 
   const paramsStr = parts.join(' | ');
 
+  const skillRef = skillBaseDir
+    ? `请调用「akshare-stock」技能（路径：${skillBaseDir}）获取A股数据`
+    : `请调用「akshare-stock」技能获取A股数据`;
+
   return (
-    `【A股量化工具】请调用「akshare-stock」技能获取A股数据。\n\n` +
+    `【A股量化工具】${skillRef}。\n\n` +
     `标的配置：\n${paramsStr}\n\n` +
     `请结合 AkShare 数据汇总近期表现，并给出分析建议。\n` +
     `输出偏好：${outputLabel}`
@@ -78,6 +84,8 @@ function buildStockMessage(params: {
 export function StockDetail() {
   const navigate = useNavigate();
   const agents = useAgentsStore((state) => state.agents);
+  const skills = useSkillsStore((state) => state.skills);
+  const fetchSkills = useSkillsStore((state) => state.fetchSkills);
 
   const [stockCode, setStockCode] = useState('');
   const [queryType, setQueryType] = useState<QueryType>('realtime');
@@ -92,6 +100,14 @@ export function StockDetail() {
   const [sending, setSending] = useState(false);
 
   const isKline = queryType === 'kline';
+
+  // Fetch skills on mount to get baseDir for skill path
+  useEffect(() => {
+    void fetchSkills();
+  }, [fetchSkills]);
+
+  const akshareSkill = skills.find((s) => s.slug === 'akshare-stock' || s.id === 'akshare-stock');
+  const skillBaseDir = akshareSkill?.baseDir;
 
   const handleSend = async () => {
     if (!stockCode.trim()) {
@@ -115,6 +131,7 @@ export function StockDetail() {
         highAlertPrice: highAlertPrice.trim() || undefined,
         lowAlertPrice: lowAlertPrice.trim() || undefined,
         watchNote: watchNote.trim() || undefined,
+        skillBaseDir,
       });
       await useChatStore.getState().sendMessage(message, undefined, selectedAgentId);
       navigate('/');

@@ -11,6 +11,7 @@ import { MainLayout } from './components/layout/MainLayout';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { Apps } from './pages/Apps';
 import { StockDetail } from './pages/Apps/StockDetail';
+import { FootballDetail } from './pages/Apps/FootballDetail';
 import { Models } from './pages/Models';
 import { Chat } from './pages/Chat';
 import { Agents } from './pages/Agents';
@@ -199,6 +200,7 @@ function App() {
             <Route path="/personal-center" element={<PersonalCenter />} />
             <Route path="/apps" element={<Apps />} />
             <Route path="/apps/stock" element={<StockDetail />} />
+            <Route path="/apps/football" element={<FootballDetail />} />
             <Route path="/settings/*" element={<Settings />} />
             {extraRoutes.map((r) => (
               <Route key={r.path} path={r.path} element={<r.component />} />

@@ -38,7 +38,7 @@ export function initializePortableData(): DataInitResult {
     process.env.USERPROFILE = dataDirWithSep;
     // Tell OpenClaw to use dataDir/.openclaw as its state directory, so that
     // skills, config, and workspace are all co-located with the portable app.
-    process.env.OPENCLAW_STATE_DIR = dataDirWithSep;
+    process.env.OPENCLAW_STATE_DIR = join(dataDirWithSep, '.openclaw');
 
     // Set Electron's userData path to portable directory
     app.setPath('userData', dataDir);

@@ -22,6 +22,13 @@ export class GatewayStateController {
 
   setStatus(update: Partial<GatewayStatus>): void {
     const previousState = this.status.state;
+
+    // When the gateway stops, reset gatewayReady so renderer blocks RPCs until
+    // the next gateway.ready event or fallback timer fires.
+    if (update.state === 'stopped') {
+      update.gatewayReady = false;
+    }
+
     this.status = { ...this.status, ...update };
 
     if (this.status.state === 'running' && this.status.connectedAt) {
