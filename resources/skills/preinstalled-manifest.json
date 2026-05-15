@@ -17,6 +17,14 @@
       "autoEnable": true
     },
     {
+      "slug": "soccer-lottery",
+      "repo": "local",
+      "repoPath": "soccer-lottery",
+      "ref": "local",
+      "version": "local",
+      "autoEnable": true
+    },
+    {
       "slug": "pdf",
       "repo": "anthropics/skills",
       "repoPath": "skills/pdf",
